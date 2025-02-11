@@ -1,0 +1,110 @@
+.w-100 {
+    width: 100%;
+}
+
+.min-w-100px {
+    min-width: 100px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-primary {
+    color: #1890ff !important;
+}
+
+.text-success {
+    color: #52c41a !important;
+}
+
+.text-warning {
+    color: #faad14 !important;
+}
+
+.text-danger {
+    color: #ff4d4f !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.ant-select-clear,
+.ant-picker-clear,
+.ant-input-clear-icon {
+    color: #ff4d4f !important;
+}
+
+.ant-modal-confirm-btns button {
+    min-width: 100px;
+}
+
+/* Begin margin */
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mr-5 {
+    margin-right: 5px;
+}
+
+/* End margin */
+
+/* Begin InputGroup */
+.addon-text-border-radius-left-0 .ant-select-selector,
+.addon-text-border-radius-left-0 .ant-picker {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.addon-text-border-radius-right-0 .ant-select-selector,
+.addon-text-border-radius-right-0 .ant-picker {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.iot-input-group .ant-select .ant-select-selection-item {
+    width: 100px;
+}
+/* End InputGroup */
+
+/* Begin color picker */
+
+.ant-color-picker-input-container .ant-color-picker-format-select,
+.ant-color-picker-input-container .ant-input-number {
+    display: none !important;
+}
+
+.ant-collapse-header {
+    display: none !important;
+}
+
+.ant-color-picker-slider-container {
+    margin-bottom: 12px;
+}
+
+.ant-color-picker-slider-alpha {
+    display: none;
+}
+
+.ant-color-picker-slider-hue {
+    margin-bottom: 0;
+    margin-top: 10px;
+}
+
+/* End color picker */
+
+.ant-menu-submenu .ant-menu-title-content a {
+    color: inherit;
+}
+
+.ant-table-pagination {
+    padding-right: 16px;
+}
+
+.cmd-col {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}

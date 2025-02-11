@@ -115,7 +115,7 @@ const AppLayout = (): React.JSX.Element => {
                             background: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: 6,
                         }}>
-                        <div className={styles.textLogo}>{collapsed ? 'QLVP' : 'Quản lý vi phạm'}</div>
+                        <div className={styles.textLogo}>{collapsed ? 'MOU' : 'Quản lý MOU'}</div>
                     </div>
                     <Menu
                         theme='dark'
@@ -182,5 +182,11 @@ const items: MenuItem[] = [
         icon: <DashboardOutlined />,
         label: <Link to='/tong-quan'>Tổng quan</Link>,
         title: 'Tổng quan',
+    },
+    {
+        key: 'user',
+        icon: <DashboardOutlined />,
+        label: <Link to='/user'>User</Link>,
+        title: 'User',
     },
 ]

@@ -1,10 +1,11 @@
+import '@ant-design/v5-patch-for-react-19'
 import { App as AntdApp, ConfigProvider } from 'antd'
 import 'antd/dist/reset.css'
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import './App.css'
 import { AppLayout } from './components'
 import { useAppState } from './hooks'
-import { DashboardPage, LoginPage } from './pages'
+import { DashboardPage, LoginPage, UserPage } from './pages'
 
 function App() {
     const isLogin = useAppState(state => state.isLogin)
@@ -26,6 +27,7 @@ function App() {
                             <Route index element={<LoginPage />} />
                             <Route element={!isLogin ? <Navigate to='/' replace /> : <AppLayout />}>
                                 <Route path='tong-quan' element={<DashboardPage />} />
+                                <Route path='user' element={<UserPage />} />
                             </Route>
                         </Route>
                     </Routes>

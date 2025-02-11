@@ -35,7 +35,7 @@ const LoginPage = (): React.JSX.Element => {
                 apiUtil.setToken(newUserInfo.AccessToken)
                 setIsLogin(true)
                 setUsername(newUserInfo.UserName)
-                navigate('/dashboard')
+                navigate('/tong-quan')
             })
             .finally(() => {
                 setIsBusy(false)
@@ -63,7 +63,7 @@ const LoginPage = (): React.JSX.Element => {
                 apiUtil.setToken(result.AccessToken)
                 setIsLogin(true)
                 setUsername(result.UserName)
-                navigate('/dashboard')
+                navigate('/tong-quan')
             })
             .finally(() => {
                 setIsBusy(false)
@@ -75,7 +75,7 @@ const LoginPage = (): React.JSX.Element => {
             <div className='form'>
                 <div className='logo'>
                     {/* <img alt='logo' src='/assets/imgs/logo.svg' /> */}
-                    <span className='text-gradient'>Đăng Nhập Hệ Thống</span>
+                    <span className='text-gradient'>Đăng Nhập</span>
                 </div>
                 <StandardForm form={form} onFinish={onFinish}>
                     <Form.Item<FieldType>
