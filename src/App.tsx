@@ -5,7 +5,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import './App.css'
 import { AppLayout } from './components'
 import { useAppState } from './hooks'
-import { DashboardPage, LoginPage, UserPage } from './pages'
+import { ManagingMOU, DashboardMOU, LoginPage, ListofUser, ListofAdmin, Wordeditor } from './pages'
 
 function App() {
     const isLogin = useAppState(state => state.isLogin)
@@ -26,8 +26,14 @@ function App() {
                         <Route path='/' element={<Outlet />}>
                             <Route index element={<LoginPage />} />
                             <Route element={!isLogin ? <Navigate to='/' replace /> : <AppLayout />}>
-                                <Route path='tong-quan' element={<DashboardPage />} />
-                                <Route path='user' element={<UserPage />} />
+                                <Route path='tong-quan' element={<ManagingMOU />} />
+                                {/* <Route path='user' element={<UserPage />} /> */}
+                                <Route path='mou' element={<ManagingMOU />} />
+                                <Route path='dashboard' element={<DashboardMOU />} />
+
+                                <Route path='user' element={<ListofUser />} />
+                                <Route path='admin' element={<ListofAdmin />} />
+                                <Route path='wordeditor' element={<Wordeditor />} />
                             </Route>
                         </Route>
                     </Routes>

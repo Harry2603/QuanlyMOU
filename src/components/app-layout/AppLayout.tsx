@@ -4,7 +4,9 @@ import {
     LogoutOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    UserOutlined
+    UserOutlined,
+    FileOutlined,
+    SettingOutlined
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { Button, Input, Layout, Menu, Space, theme } from 'antd'
@@ -19,6 +21,21 @@ import { ModalChangePassword } from './components'
 import styles from './style.module.css'
 
 type MenuItem = Required<MenuProps>['items'][number]
+
+function getItem(
+    label: React.ReactNode,
+    key: React.Key,
+    icon?: React.ReactNode,
+    children?: MenuItem[],
+  ): MenuItem {
+    return {
+      key,
+      icon,
+      children,
+      label,
+    } as MenuItem;
+  }
+  
 
 const { Header, Content, Sider } = Layout
 
@@ -107,7 +124,7 @@ const AppLayout = (): React.JSX.Element => {
         <Fragment>
             <Input addonBefore='' hidden />
             <Layout>
-                <Sider trigger={null} collapsible collapsed={collapsed} style={{ height: '100vh' }}>
+                <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} style={{ height: '100vh' }}>
                     <div
                         style={{
                             height: 32,
@@ -116,6 +133,7 @@ const AppLayout = (): React.JSX.Element => {
                             borderRadius: 6,
                         }}>
                         <div className={styles.textLogo}>{collapsed ? 'MOU' : 'Quản lý MOU'}</div>
+                        
                     </div>
                     <Menu
                         theme='dark'
@@ -140,12 +158,11 @@ const AppLayout = (): React.JSX.Element => {
                                 position: 'relative',
                             }}>
                             <div>
-                                <Button
-                                    type='text'
-                                    icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                                    onClick={() => setCollapsed(!collapsed)}
-                                    style={{ fontSize: 16, width: 64, height: 64 }}
-                                />
+                                    {/* type='text' */}
+                                    {/* // icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                                    // onClick={() => setCollapsed(!collapsed)} */}
+                                    {/* style={{ fontSize: 16, width: 64, height: 64 }} */}
+
                                 <span style={{ fontSize: 18, fontWeight: 600 }}>{title}</span>
                             </div>
                             <Space style={{ marginRight: 24 }}>
@@ -176,17 +193,24 @@ const AppLayout = (): React.JSX.Element => {
 
 export default AppLayout
 
+// Danh sách menu có submenu
 const items: MenuItem[] = [
-    {
-        key: 'tong-quan',
-        icon: <DashboardOutlined />,
-        label: <Link to='/tong-quan'>Tổng quan</Link>,
-        title: 'Tổng quan',
-    },
-    {
-        key: 'user',
-        icon: <DashboardOutlined />,
-        label: <Link to='/user'>User</Link>,
-        title: 'User',
-    },
-]
+    getItem(<Link to="/tong-quan">Tổng quan</Link>, 'tong-quan', <DashboardOutlined />),
+
+    getItem('ManagingMOU', 'managing-mou', <UserOutlined />, [
+        getItem(<Link to="/mou">MOU</Link>, 'mou'),
+        getItem(<Link to="/dashboard">Dashboard</Link>, 'dashboard'),
+    ]),
+    getItem('ManagingAccount', 'account-group', <UserOutlined />, [
+        getItem(<Link to="/user">List of User</Link>, 'user-list'),
+        getItem(<Link to="/admin">List of Admin</Link>, 'admin-list'),
+    ]),
+    getItem(<Link to="/wordeditor">Wordeditor</Link>, 'wordeditor', <FileOutlined />),
+  
+    // getItem('Hệ thống', 'system', <SettingOutlined />, [
+    //   getItem(<Link to="/system/config">Cấu hình</Link>, 'system-config'),
+    //   getItem(<Link to="/system/logs">Nhật ký hệ thống</Link>, 'system-logs'),
+    // ]),
+  
+    getItem(<Link to="/documents">Tài liệu</Link>, 'documents', <FileOutlined />),
+  ];

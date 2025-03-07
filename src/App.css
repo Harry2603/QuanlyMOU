@@ -108,3 +108,36 @@
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
+.custom-styled-tabs .ant-tabs-nav {
+    margin-bottom: 16px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+/* [class^="ant-tabs"], [class*=" ant-tabs"] {
+    font-size: 18px;
+} */
+
+.custom-styled-tabs .ant-tabs-tab {
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #333;
+    padding: 5px 0px;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+.custom-styled-tabs .ant-tabs-tab:hover {
+    color: #1677ff;
+    background-color: #f5f7fa;
+}
+
+.custom-styled-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: #1677ff;
+    font-weight: 700;
+    border-bottom: 3px solid #1677ff;
+}
+
+.custom-styled-tabs .ant-tabs-ink-bar {
+    background-color: transparent;
+}
