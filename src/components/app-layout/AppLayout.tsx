@@ -195,22 +195,28 @@ export default AppLayout
 
 // Danh sách menu có submenu
 const items: MenuItem[] = [
-    getItem(<Link to="/tong-quan">Tổng quan</Link>, 'tong-quan', <DashboardOutlined />),
+    // getItem(<Link to="/tong-quan">Tổng quan</Link>, 'tong-quan', <DashboardOutlined />),
 
-    getItem('ManagingMOU', 'managing-mou', <UserOutlined />, [
-        getItem(<Link to="/mou">MOU</Link>, 'mou'),
-        getItem(<Link to="/dashboard">Dashboard</Link>, 'dashboard'),
+    getItem('ManagingMOU', 'managing-mou', <MenuUnfoldOutlined />, [
+        getItem(<Link to="/Managing-MOU/mou">MOU</Link>, 'mou',<FileOutlined/>),
+        getItem(<Link to="/Managing-MOU/dashboard">DashboardMOU</Link>, 'dashboard',<DashboardOutlined/>),
+        getItem(<Link to="/Managing-MOU/wordeditor">WordEditor</Link>, 'word-editor'),
     ]),
-    getItem('ManagingAccount', 'account-group', <UserOutlined />, [
-        getItem(<Link to="/user">List of User</Link>, 'user-list'),
-        getItem(<Link to="/admin">List of Admin</Link>, 'admin-list'),
+    getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
+        getItem(<Link to="/ManagingAccount/user">List of User</Link>, 'user-list'),
+        getItem(<Link to="/ManagingAccount/admin">List of Admin</Link>, 'admin-list'),
     ]),
-    getItem(<Link to="/wordeditor">Wordeditor</Link>, 'wordeditor', <FileOutlined />),
+
+    getItem('ManagingStudent', 'student-group', <UserOutlined />, [
+        getItem(<Link to="/ManagingStudent/post-graduate">ListOfPostGraduateStudent</Link>, 'ListOfPostGraduateStudent'),
+        getItem(<Link to="/ManagingStudent/graduates">TheNumberOfGraduates</Link>, 'TheNumberOfGraduates'),
+        getItem(<Link to="/ManagingStudent/alumni">ComprehensiveAlumniManagement</Link>, 'Comprehensive Alumni Management'),
+        getItem(<Link to="/ManagingStudent/dashboard-csv">DashboardCSV</Link>, 'dashboard-csv',<DashboardOutlined/>),
+      ]),
   
     // getItem('Hệ thống', 'system', <SettingOutlined />, [
     //   getItem(<Link to="/system/config">Cấu hình</Link>, 'system-config'),
     //   getItem(<Link to="/system/logs">Nhật ký hệ thống</Link>, 'system-logs'),
     // ]),
-  
-    getItem(<Link to="/documents">Tài liệu</Link>, 'documents', <FileOutlined />),
+    // getItem(<Link to="/documents">Tài liệu</Link>, 'documents', <FileOutlined />),
   ];

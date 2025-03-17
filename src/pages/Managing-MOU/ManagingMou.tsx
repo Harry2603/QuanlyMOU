@@ -1,10 +1,10 @@
-import axios from 'axios';
 import { Table, Space, Input, Button, Modal, Form, Input as AntInput, DatePicker, Row, Col, Upload, Select, InputNumber } from 'antd';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { TableColumnsType } from 'antd';
 import ExpandedContent from './ExpandedContent';
 import { EditOutlined, DeleteOutlined, PlusCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { apiUtil } from '../../utils';
 
 const { Search } = Input;
 const { TextArea } = Input;
@@ -22,6 +22,7 @@ interface DataType {
     description: string;
     purpose: string;
     principle: string;
+    id: number;
 }
 
 
@@ -37,20 +38,60 @@ const ManagingMOU: React.FC = () => {
     const [editingRecord, setEditingRecord] = useState<DataType | null>(null);
     const [startDate, setStartDate] = useState(dayjs());
     const [endDate, setEndDate] = useState(dayjs());
+    const [isLoading, setIsLoading] = useState(false);
+    const [mouList, setMOUList] = useState<DataType[]>([]);
 
-    console.log("startDate:", startDate);
-    console.log("endDate:", endDate);
+    // const [testArr, setTestArr] = useState([])
+
+    // console.log("startDate:", startDate);
+    // console.log("endDate:", endDate);
     // console.log("addForm:", addForm);
     // console.log("editForm:", editForm);
+    // const getAccessToken = () => {
+    //     return localStorage.getItem('access_token') || '';
+    // };
 
-    // // Fetch dữ liệu từ API khi component mount
-    // useEffect(() => {
-    //     axios.get(API_URL)
-    //         .then(response => {
-    //             setFilteredData(response.data);
-    //         })
-    //         .catch(error => console.error('Error fetching data:', error));
-    // }, []);
+    const onLoadMOU = () => {
+        
+        setIsLoading(true)
+        apiUtil.auth.queryAsync<DataType[]>('MOU_Select').then(resp => {
+            if (resp.IsSuccess) {
+                if (resp.Result === null) return
+                setMOUList(resp.Result)// Cập nhật danh sách MOU vào state
+                setIsLoading(false)// Kết thúc trạng thái loading
+                // console.log('res.Result', resp.Result)
+            } else {
+                console.log('load linh vuc fail')
+            }
+        })
+    }
+
+    const onDeleteMOU = (id: number) => {
+    setIsLoading(true);
+    
+    apiUtil.auth.queryAsync<{ IsSuccess: boolean }>('MOU_Delete', { id }).then(resp => {
+        if (resp.IsSuccess) {
+            // Xóa thành công, cập nhật danh sách
+            setMOUList(prevList => prevList.filter(item => item.id !== id));
+            setIsLoading(false);
+            console.log(`MOU với ID ${id} đã bị xóa`);
+        } else {
+            console.log(`Xóa MOU thất bại`);
+        }
+    }).catch(error => {
+        console.error('Lỗi khi xóa MOU:', error);
+        setIsLoading(false);
+    });
+};
+
+    
+
+    useEffect(() => {
+        
+        onLoadMOU()
+        onDeleteMOU
+    }, [])
+
     // Hiển thị Modal
     const showAddModal = () => {
         addForm.resetFields();
@@ -61,71 +102,59 @@ const ManagingMOU: React.FC = () => {
 
     // Hiển thị modal Edit
     const showEditModal = (record: DataType) => {
-        const periodParts = record.period.split(" - "); // Tách chuỗi "DD/MM/YY - DD/MM/YY"
-        const startDate = periodParts[0] ? dayjs(periodParts[0], "DD/MM/YY") : dayjs();
-        const endDate = periodParts[1] ? dayjs(periodParts[1], "DD/MM/YY") : dayjs();
 
-
-        editForm.setFieldsValue({
-            ...record,
-            progress: parseInt(record.progress),
-            status: record.Status.toLowerCase(),
-            startDate: startDate,
-            endDate: endDate,
-        });
-
-        setEditingRecord(record);
-        setIsEditModalOpen(true);
-        setStartDate(startDate);  // Đúng kiểu dữ liệu
-        setEndDate(endDate);      // Đúng kiểu dữ liệu
-    };
-
-
-    // Đóng Modal
-    const handleCancel = () => {
-        setTimeout(() => {
-            addForm.resetFields();
-            editForm.resetFields();
-        }, 300);
-        setIsAddModalOpen(false);
-        setIsEditModalOpen(false);
-    };
-
-    // Thêm hoặc Cập nhật dữ liệu mới từ Modal
-    const handleOk = () => {
-        addForm.validateFields().then(values => {
-            let updatedProgress = '0%';
-            if (values.status === 'in_progress') updatedProgress = `${progress}%`;
-            else if (values.status === 'completed') updatedProgress = '100%';
-
-            const newData: DataType = {
-                key: `${filteredData.length + 1}`,
-                ID: values.ID,
-                nameA: values.nameA,
-                nameB: values.nameB,
-                academicYear: values.academicYear,
-                progress: updatedProgress,
-                Status: values.status === 'completed' ? 'Completed' : values.status === 'in_progress' ? 'In Progress' : 'Pending',
-                period: `${values.startDate?.format('DD/MM/YY')} - ${values.endDate?.format('DD/MM/YY')}`,
-                address: values.address || 'MOU-File',
-                description: values.description,
-                purpose: values.purpose,
-                principle: values.principle,
-
-            };
-            axios.post('https://api.mou.iotsoftvn.com/auth/query/MOU_Select_By_Id', newData)
-            .then(() => {
-                setFilteredData([...filteredData, newData]);
-                addForm.resetFields();
-                setIsAddModalOpen(false);
-            })
-            .catch(error => console.error('Error adding data:', error));
+    const periodParts = record.period?.split(" - ") || [];
+    const startDate = periodParts[0] ? dayjs(periodParts[0], "DD/MM/YY") : dayjs();
+    const endDate = periodParts[1] ? dayjs(periodParts[1], "DD/MM/YY") : dayjs();
+    
+    editForm.setFieldsValue({
+        ...record,
+        progress: parseInt(record.progress),
+        status: record?.Status?.toLowerCase() || "",
+        startDate: startDate,
+        endDate: endDate,
     });
+
+    setEditingRecord(record);
+    setIsEditModalOpen(true);
+    console.log(isEditModalOpen);
+    setStartDate(startDate);
+    setEndDate(endDate);
 };
 
+
+    const handleAdd = async () => {
+        try {
+            const values = await addForm.validateFields();
+
+            const updatedProgress = values.status === "completed"
+                ? "100%"
+                : values.status === "in_progress"
+                    ? `${progress}%`
+                    : "0%";
+
+            const newData: DataType = {
+                key: crypto.randomUUID(), // Hoặc Date.now()
+                ...values,
+                progress: updatedProgress,
+                Status: values.status === "completed"
+                    ? "Completed"
+                    : values.status === "in_progress"
+                        ? "In Progress"
+                        : "Pending",
+                period: `${values.startDate.format("DD/MM/YY")} - ${values.endDate.format("DD/MM/YY")}`,
+            };
+
+            setFilteredData(prevData => [...prevData, newData]);
+            setIsAddModalOpen(false);
+            addForm.resetFields();
+        } catch (error) {
+            console.error("Validation failed:", error);
+        }
+    };
+
     // Hàm Edit
-     // Chỉnh sửa MOU
-     const handleEdit = () => {
+    const handleEdit = () => {
         editForm.validateFields().then(values => {
             const updatedData = {
                 ...editingRecord,
@@ -134,31 +163,44 @@ const ManagingMOU: React.FC = () => {
                 period: `${values.startDate?.format('DD/MM/YY')} - ${values.endDate?.format('DD/MM/YY')}`
             };
 
-            axios.post('https://api.mou.iotsoftvn.com/auth/execute-reader/MOU_Select_By_Id', updatedData)
-                .then(() => {
-                    setFilteredData(prevData =>
-                        prevData.map(item => (item.key === editingRecord?.key ? updatedData : item))
-                    );
-                    editForm.resetFields();
-                    setIsEditModalOpen(false);
-                })
-                .catch(error => console.error('Error updating data:', error));
+            setFilteredData(prevData =>
+                prevData.map(item => (item.key === editingRecord?.key ? updatedData : item))
+            );
+            editForm.resetFields();
+            setIsEditModalOpen(false);
         });
     };
 
-
+    //  Đóng modal
+    const handleCancel = () => {
+        setIsAddModalOpen(false);
+        setIsEditModalOpen(false);
+        setTimeout(() => {
+            addForm.resetFields();
+            editForm.resetFields();
+        }, 300);
+    };
     // const handleEditClick = (record: DataType) => {
     //     showEditModal(record);
     // };
 
-    // Hàm Delete
+    // Xóa một MOU
     const handleDelete = (record: DataType) => {
-        axios.delete('https://api.mou.iotsoftvn.com/auth/execute-reader/MOU_Select_By_Id')
-            .then(() => {
-                setFilteredData(prev => prev.filter(item => item.key !== record.key));
-            })
-            .catch(error => console.error('Error deleting data:', error));
+        Modal.confirm({
+            title: "Are you sure you want to delete this MOU?",
+            okText: "Yes",
+            cancelText: "No",
+            onOk: async () => {
+                try {
+                    await onDeleteMOU(record.id); // Gọi API để xóa MOU
+                } catch (error) {
+                    console.error("Lỗi khi xóa MOU:", error);
+                }
+            },
+        });
     };
+    
+
 
     // Hàm Search
     const onSearch = (value: string) => {
@@ -173,14 +215,14 @@ const ManagingMOU: React.FC = () => {
 
     // Cột Table
     const columns: TableColumnsType<DataType> = [
-        { title: 'Code', dataIndex: 'ID', key: 'ID' },
-        { title: 'Agreement', dataIndex: 'description', key: 'description' },
-        { title: 'Party A', dataIndex: 'nameA', key: 'nameA' },
-        { title: 'Party B', dataIndex: 'nameB', key: 'nameB' },
-        { title: 'Academic year', dataIndex: 'academicYear', key: 'academicYear' },
-        { title: 'Construction progress', dataIndex: 'progress', key: 'progress' },
-        { title: 'Status', dataIndex: 'Status', key: 'Status' },
-        { title: 'Contract term', dataIndex: 'period', key: 'period' },
+        { title: 'MOU-ID', dataIndex: 'ma_mou', key: 'ma_mou' },  // ID (trước là ma_mou)
+        { title: 'Content', dataIndex: 'tieu_de', key: 'tieu_de' }, // Tiêu đề (trước là tieu_de)
+        { title: 'Party A', dataIndex: 'TenDN_A', key: 'TenDN_A' }, // Bên A (trước là ben_a_id)
+        { title: 'Party B', dataIndex: 'TenDN_B', key: 'TenDN_B' }, // Bên B (trước là ben_b_id)
+        { title: 'Academic year', dataIndex: 'nam_hoc', key: 'nam_hoc' }, // Năm học (trước là nam_hoc)
+        { title: 'Construction progress', dataIndex: 'PhanTramTienDo', key: 'PhanTramTienDo' }, // Phần trăm tiến độ (trước là PhanTramTienDo)
+        { title: 'Status', dataIndex: 'trang_thai', key: 'trang_thai' }, // Trạng thái (trước là trang_thai)
+        { title: 'Contract term', dataIndex: 'thoi_han', key: 'thoi_han' }, // Thời hạn hợp đồng (trước là thoi_han)
         {
             title: 'Action',
             key: 'action',
@@ -193,11 +235,15 @@ const ManagingMOU: React.FC = () => {
         },
     ];
 
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>All cooperation agreements</p>
+            <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+                All cooperation agreements
+            </p>
 
             <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
+            {/* <WordEditor /> */}
                 <Search
                     placeholder="Search by name, code or description"
                     allowClear
@@ -212,7 +258,7 @@ const ManagingMOU: React.FC = () => {
             <div style={{ overflowX: 'auto', marginTop: '20px' }}>
                 <Table<DataType>
                     columns={columns}
-                    dataSource={filteredData}
+                    dataSource={mouList}
                     expandable={{
                         expandedRowRender: (record) => <ExpandedContent record={record} />,
                     }}
@@ -225,13 +271,14 @@ const ManagingMOU: React.FC = () => {
             <Modal
                 title="Add MOU"
                 open={isAddModalOpen}
-                onOk={handleOk}
+                onOk={handleAdd}
                 onCancel={handleCancel}
                 centered
                 okText="Save"
                 cancelText="Cancel"
                 width={1000}
             >
+
                 <Form form={addForm} layout="vertical">
                     <Row gutter={10}>
                         <Col xs={24}>
@@ -452,3 +499,9 @@ const ManagingMOU: React.FC = () => {
 };
 
 export default ManagingMOU;
+
+
+
+
+
+

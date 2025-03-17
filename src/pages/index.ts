@@ -5,6 +5,8 @@ import ListofUser from './ManagingAccount/ListofUser.tsx';
 import ListofAdmin from './ManagingAccount/ListofAdmin.tsx';
 import LoginPage from './login-page/LoginPage';
 import ListOfPostGraduateStudent from './ManagingStudent/ListOfPostGraduateStudent.tsx';
-import Wordeditor from './Wordeditor/Wordeditor.tsx';
+import TheNumberOfGraduates from './ManagingStudent/TheNumberOfGraduates.tsx';
+import ComprehensiveAlumniManagement from './ManagingStudent/ComprehensiveAlumniManagement.tsx';
+import WordEditor from './Managing-MOU/WordEditor.tsx';
 
-export { ManagingMOU, DashboardMOU, DashboardCSV, LoginPage, ListofAdmin,ListofUser,Wordeditor,ListOfPostGraduateStudent };
+export { ManagingMOU, DashboardMOU, DashboardCSV, LoginPage, ListofAdmin,ListofUser,ListOfPostGraduateStudent,TheNumberOfGraduates,ComprehensiveAlumniManagement,WordEditor };

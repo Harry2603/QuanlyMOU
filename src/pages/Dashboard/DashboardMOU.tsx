@@ -1,7 +1,7 @@
-import React from 'react';
+import React from 'react'
 
-const DashboardMOU = () => {
-    return <h1>Dashboard MOU Page</h1>;
-};
+const DashboardMOU: React.FC = () => {
+    return <div>DashboardMOU</div>
+}
 
-export default DashboardMOU;
+export default DashboardMOU
