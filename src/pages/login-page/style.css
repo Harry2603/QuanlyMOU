@@ -62,3 +62,68 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
+.register-form .form {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    margin: -160px 0 0 -160px;
+    width: 320px;
+    height: auto;
+    padding: 36px;
+    box-shadow: 0 0 100px rgba(0, 0, 0, 0.08);
+}
+.register-form .form button {
+    width: 100%;
+}
+.register-form .form p {
+    color: #cccccc;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+.register-form .logo {
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.logregisterin-form .logo img {
+    width: 40px;
+    margin-right: 8px;
+}
+.register-form .logo span {
+    vertical-align: text-bottom;
+    font-size: 16px;
+    text-transform: uppercase;
+    display: inline-block;
+    font-weight: 700;
+    color: #ff0000;
+}
+.register-form .ant-spin-container,
+.register-form .ant-spin-nested-loading {
+    height: 100%;
+}
+
+.register-form .footer {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+}
+
+.register-form .text-gradient {
+    background-image: -webkit-gradient(
+        linear,
+        37.219838% 34.532506%,
+        36.425669% 93.178216%,
+        from(#29cdff),
+        to(#0a60ff),
+        color-stop(0.37, #148eff)
+    );
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

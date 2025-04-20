@@ -8,8 +8,8 @@ import SubTableAlt from './ObligationsAndResponsibilitiesOfTheParties';
 interface ExpandedContentProps {
     record: {
         description: string
-        purpose: string;
-        principle: string;
+        muc_dich: string;
+        nguyen_tac: string;
     }; // Nhận dữ liệu từ hàng được mở rộng
 }
 
@@ -19,15 +19,13 @@ const ExpandedContent: React.FC<ExpandedContentProps> = ({ record }) => {
     const changeTabPosition = (e: RadioChangeEvent) => {
         setTabPosition(e.target.value);
     };
+    console.log("Expanded record data:", record);
 
     return (
         <div>
             <Space style={{ marginBottom: 24 }}>
                 <Radio.Group value={tabPosition} onChange={changeTabPosition}>
                     <Radio.Button value="top">top</Radio.Button>
-                    <Radio.Button value="bottom">bottom</Radio.Button>
-                    <Radio.Button value="left">left</Radio.Button>
-                    <Radio.Button value="right">right</Radio.Button>
                 </Radio.Group>
             </Space>
             <Tabs
@@ -36,13 +34,13 @@ const ExpandedContent: React.FC<ExpandedContentProps> = ({ record }) => {
                 items={[
                     {
                         label: 'I. Purpose of cooperation',
-                        key: '1',
-                        children: `Details about the purpose of cooperation - ${record.purpose}`,
+                        key: 'muc_dich',
+                        children: record?.muc_dich,
                     },
                     {
                         label: 'II. Principles of cooperation agreements',
-                        key: '2',
-                        children: `Details about the principles of cooperation - ${record.principle}`,
+                        key: 'nguyen_tac',
+                        children: record?.nguyen_tac ,
                     },
                     {
                         label: 'III. Contents of the cooperation agreement',

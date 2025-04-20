@@ -31,20 +31,11 @@ const LoginPage = (): React.JSX.Element => {
                 if (newUserInfo === null) return
                 if (newUserInfo == null) return
                 const str = JSON.stringify(newUserInfo)
-
-                localStorage.setItem('userRole', newUserInfo.Role) // Lưu role vào localStorage
-
                 localStorage.setItem('userInfo', str)
                 apiUtil.setToken(newUserInfo.AccessToken)
                 setIsLogin(true)
                 setUsername(newUserInfo.UserName)
-                if (newUserInfo.Role === 'user') {
-                    navigate('/WordEditor')
-                } else {
-                    navigate('/Managing-MOU')
-                }
-                // navigate('/Managing-MOU')
-                // (tong-quan)
+                navigate('/Managing-MOU')
             })
             .finally(() => {
                 setIsBusy(false)
@@ -69,19 +60,11 @@ const LoginPage = (): React.JSX.Element => {
                 const result = resp.Result
                 if (result === null) return
                 localStorage.setItem('userInfo', JSON.stringify(result))
-                localStorage.setItem('userRole', result.Role) // Lưu role vào localStorage
                 apiUtil.setToken(result.AccessToken)
                 setIsLogin(true)
                 setUsername(result.UserName)
-                // navigate('/Managing-MOU')
-                // Điều hướng dựa trên role
-                if (result.Role === 'user') {
-                    navigate('/WordEditor')
-                } else {
-                    navigate('/Managing-MOU')
-                }
+                navigate('/Managing-MOU')
             })
-
             .finally(() => {
                 setIsBusy(false)
             })

@@ -5,12 +5,9 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import './App.css'
 import { AppLayout } from './components'
 import { useAppState } from './hooks'
-import { ManagingMOU, DashboardMOU, LoginPage, ListofUser, ListofAdmin, ListOfPostGraduateStudent, DashboardCSV, TheNumberOfGraduates, ComprehensiveAlumniManagement,WordEditor} from './pages'
+import { DocumentList, ManagingMOU, LoginPage, ListofUser, ListofAdmin, ListOfPostGraduateStudent, DashboardCSV, TheNumberOfGraduates, ComprehensiveAlumniManagement,WordEditor} from './pages'
+import RegisterPage from './pages/login-page/RegisterPage'
  
-// const clientId="393569771469-alife8pccujdsd3hk4nmnv1ben8npnhi.apps.googleusercontent.com"
-// const apikey="AIzaSyCrOvo-H2ivJHZhmldboxp5L1AufAtNYC8"
-// const scope="http://www.googleapis.com/auth/drive"
-
 function App() {
     const isLogin = useAppState(state => state.isLogin)
     return (
@@ -33,14 +30,15 @@ function App() {
                                 {/* <Route path='user' element={<UserPage />} /> */}
 
                                 <Route path='Managing-MOU' element={<Outlet />}>
+                                    <Route path='documentlist' element={<DocumentList/>} />
                                     <Route path='mou' element={<ManagingMOU />} />
-                                    <Route path='dashboard' element={<DashboardMOU />} />
                                     <Route path='wordeditor' element={<WordEditor />}/>
                                 </Route>
 
                                 <Route path='ManagingAccount' element={<Outlet />}>
-                                    <Route path='user' element={<ListofUser />} />
-                                    <Route path='admin' element={<ListofAdmin />} />
+                                    <Route path='user-account' element={<ListofUser />} />
+                                    <Route path='admin-account' element={<ListofAdmin />} />
+                                    <Route path='register' element={<RegisterPage />} />
                                 </Route>
 
                                 <Route path='ManagingStudent' element={<Outlet />}>

@@ -14,18 +14,8 @@ const axiosInstance = axios.create({
     timeout: 10_000,
     headers: {
         Authorization: `Bearer ${getAccessToken()}`,
-        Role: localStorage.getItem('userRole') || 'user' // Thêm header Role
     },
 })
-
-//phần này thêm sau sai thì xóa
-// const userRole = localStorage.getItem('userRole')
-// if (userRole !== 'admin') {
-//     message.error('Bạn không có quyền truy cập!')
-//     window.location.href = '/not-authorized'
-// }
-
-
 const executeRequestAsync = async <T>(
     url: string,
     // eslint-disable-next-line
@@ -363,19 +353,11 @@ const apiUtil = {
                 Password: password,
             })
             const data = resp.data
-            if (data.IsSuccess) {
-                // Lưu vai trò người dùng vào localStorage
-                localStorage.setItem('userRole', data.Result?.Role || 'user');
-            } else {
-                if (data.Message) {
-                    message.error(data.Message);
+            if (data.IsSuccess === false) {
+                if (data.Message !== '') {
+                    message.error(data.Message)
                 }
             }
-            // if (data.IsSuccess === false) {
-            //     if (data.Message !== '') {
-            //         message.error(data.Message)
-            //     }
-            // }
             return data
         },
         refreshTokenAsync: async (refreshToken: string): Promise<ResponseType<UserInfoType>> => {
@@ -479,7 +461,6 @@ export interface UserInfoType {
     FullName: string
     AccessToken: string
     RefreshToken: string
-    Role: 'user' | 'admin'
 }
 
 export interface UploadFileResponseType {

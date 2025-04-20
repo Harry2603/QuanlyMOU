@@ -22,6 +22,9 @@ interface DataType {
     description: string;
     purpose: string;
     principle: string;
+    muc_dich: string;
+    nguyen_tac: string;
+    trang_thai: number;
     id: number;
 }
 
@@ -41,23 +44,31 @@ const ManagingMOU: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [mouList, setMOUList] = useState<DataType[]>([]);
 
-    // const [testArr, setTestArr] = useState([])
-
-    // console.log("startDate:", startDate);
-    // console.log("endDate:", endDate);
-    // console.log("addForm:", addForm);
-    // console.log("editForm:", editForm);
-    // const getAccessToken = () => {
-    //     return localStorage.getItem('access_token') || '';
-    // };
-
     const onLoadMOU = () => {
         
         setIsLoading(true)
         apiUtil.auth.queryAsync<DataType[]>('MOU_Select').then(resp => {
             if (resp.IsSuccess) {
                 if (resp.Result === null) return
-                setMOUList(resp.Result)// Cập nhật danh sách MOU vào state
+                let handleData = resp.Result.map(item => {
+                    let trang_thai_text = ''
+                    if(item.trang_thai ==1 )
+                        {
+                        trang_thai_text = 'In Progres'
+                        }
+                    else if(item.trang_thai ==2)
+                        {
+                            trang_thai_text = 'Completed'
+                        }
+                        else if (item.trang_thai === 0) 
+                            {
+                            trang_thai_text = 'Pending';
+                        }
+                    return {...item, trang_thai_text:trang_thai_text}
+                })
+                console.log('ds',handleData);
+
+                setMOUList(handleData)// Cập nhật danh sách MOU vào state
                 setIsLoading(false)// Kết thúc trạng thái loading
                 // console.log('res.Result', resp.Result)
             } else {
@@ -87,10 +98,69 @@ const ManagingMOU: React.FC = () => {
     
 
     useEffect(() => {
-        
         onLoadMOU()
-        onDeleteMOU
     }, [])
+
+    const handleEdit = async (record?: DataType) => {
+        if (record) {
+            console.log("Dữ liệu record:", record); // Kiểm tra dữ liệu có hay khôngs
+
+            // Chuyển đổi trạng thái số sang text khi hiển thị trong Form
+        let trangThaiText = 'pending'; 
+        if (record.trang_thai === 1) trangThaiText = 'in_progress';
+        else if (record.trang_thai === 2) trangThaiText = 'completed';
+            // Nếu có record => mở modal và set giá trị
+            const periodParts = record.period?.split(" - ") || [];
+            editForm.setFieldsValue({
+                ...record,
+                trang_thai: trangThaiText, // Hiển thị dạng text
+                progress: parseInt(record.progress) || 0,
+                status: record?.Status?.toLowerCase() || "",
+                startDate: periodParts[0] ? dayjs(periodParts[0], "DD/MM/YY") : null,
+                endDate: periodParts[1] ? dayjs(periodParts[1], "DD/MM/YY") : null,
+            });
+    
+            setEditingRecord(record);
+            setIsEditModalOpen(true);
+        } else {
+            try {
+                const values = await editForm.validateFields();
+                console.log("Giá trị hợp lệ:", values);
+                if (!editingRecord) {
+                    console.log("Không có dữ liệu để cập nhật!");
+                    return;
+                }
+    
+                const updatedData = {
+                    ...editingRecord,
+                    ...values,
+                    progress: values.status === 'completed' ? '100%' : values.status === 'in_progress' ? `${values.progress || 0}%` : '0%',
+                    period: `${values.startDate?.format('DD/MM/YY')} - ${values.endDate?.format('DD/MM/YY')}`
+                };
+    
+                // Gọi API cập nhật
+                const response = await apiUtil.auth.queryAsync('MOU_Update', updatedData);
+    
+                if (response.IsSuccess) {
+                    setFilteredData(prevData =>
+                        prevData.map(item => (item.key === editingRecord.key ? updatedData : item))
+                    );
+                    console.log("Cập nhật thành công!");
+                } else {
+                    console.log("Cập nhật thất bại!");
+                }
+    
+                editForm.resetFields();
+                setIsEditModalOpen(false);
+            } catch (error) {
+                console.error("Lỗi khi cập nhật:", error);
+                console.log("Cập nhật thất bại!");
+            }
+        }
+    };
+    
+    
+    
 
     // Hiển thị Modal
     const showAddModal = () => {
@@ -98,30 +168,6 @@ const ManagingMOU: React.FC = () => {
         setProgress(0); // Reset progress về 0 khi mở modal
         setIsAddModalOpen(true);
     };
-
-
-    // Hiển thị modal Edit
-    const showEditModal = (record: DataType) => {
-
-    const periodParts = record.period?.split(" - ") || [];
-    const startDate = periodParts[0] ? dayjs(periodParts[0], "DD/MM/YY") : dayjs();
-    const endDate = periodParts[1] ? dayjs(periodParts[1], "DD/MM/YY") : dayjs();
-    
-    editForm.setFieldsValue({
-        ...record,
-        progress: parseInt(record.progress),
-        status: record?.Status?.toLowerCase() || "",
-        startDate: startDate,
-        endDate: endDate,
-    });
-
-    setEditingRecord(record);
-    setIsEditModalOpen(true);
-    console.log(isEditModalOpen);
-    setStartDate(startDate);
-    setEndDate(endDate);
-};
-
 
     const handleAdd = async () => {
         try {
@@ -153,23 +199,6 @@ const ManagingMOU: React.FC = () => {
         }
     };
 
-    // Hàm Edit
-    const handleEdit = () => {
-        editForm.validateFields().then(values => {
-            const updatedData = {
-                ...editingRecord,
-                ...values,
-                progress: values.status === 'completed' ? '100%' : values.status === 'in_progress' ? `${progress}%` : '0%',
-                period: `${values.startDate?.format('DD/MM/YY')} - ${values.endDate?.format('DD/MM/YY')}`
-            };
-
-            setFilteredData(prevData =>
-                prevData.map(item => (item.key === editingRecord?.key ? updatedData : item))
-            );
-            editForm.resetFields();
-            setIsEditModalOpen(false);
-        });
-    };
 
     //  Đóng modal
     const handleCancel = () => {
@@ -222,13 +251,13 @@ const ManagingMOU: React.FC = () => {
         { title: 'Academic year', dataIndex: 'nam_hoc', key: 'nam_hoc' }, // Năm học (trước là nam_hoc)
         { title: 'Construction progress', dataIndex: 'PhanTramTienDo', key: 'PhanTramTienDo' }, // Phần trăm tiến độ (trước là PhanTramTienDo)
         { title: 'Status', dataIndex: 'trang_thai', key: 'trang_thai' }, // Trạng thái (trước là trang_thai)
-        { title: 'Contract term', dataIndex: 'thoi_han', key: 'thoi_han' }, // Thời hạn hợp đồng (trước là thoi_han)
+        { title: 'Contract term', dataIndex: 'thoi_han', key: 'thoi_han', render: (text) => text ? text.split("T")[0] : "N/A"}, // Thời hạn hợp đồng (trước là thoi_han)
         {
             title: 'Action',
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <EditOutlined style={{ color: 'blue' }} onClick={() => showEditModal(record)} />
+                    <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
                     <DeleteOutlined style={{ color: 'red' }} onClick={() => handleDelete(record)} />
                 </Space>
             ),
@@ -263,7 +292,7 @@ const ManagingMOU: React.FC = () => {
                         expandedRowRender: (record) => <ExpandedContent record={record} />,
                     }}
                     scroll={{ x: 'max-content' }}
-                    rowKey="key"
+                    rowKey="id"
                 />
             </div>
 
@@ -279,10 +308,10 @@ const ManagingMOU: React.FC = () => {
                 width={1000}
             >
 
-                <Form form={addForm} layout="vertical">
+                <Form form={addForm} onFinish={handleCancel} layout="vertical">
                     <Row gutter={10}>
                         <Col xs={24}>
-                            <Form.Item label="Title" name="description" rules={[{ required: true, message: 'Please enter title!' }]}>
+                            <Form.Item label="Title" name="tieu_de" rules={[{ required: true, message: 'Please enter title!' }]}>
                                 <AntInput placeholder="Please enter title!" />
                             </Form.Item>
                         </Col>
@@ -290,12 +319,12 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24} sm={6}>
-                            <Form.Item label="Code" name="ID" rules={[{ required: true, message: 'Please enter MOU code!' }]}>
+                            <Form.Item label="MOU-ID" name="ma_mou" rules={[{ required: true, message: 'Please enter MOU code!' }]}>
                                 <AntInput placeholder="Please enter MOU code!" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={6}>
-                            <Form.Item label="Academic year" name="academicYear" rules={[{ required: true, message: 'Please enter academic year!' }]}>
+                            <Form.Item label="Academic year" name="nam_hoc" rules={[{ required: true, message: 'Please enter academic year!' }]}>
                                 <AntInput type="number" placeholder="Please enter academic year!" />
                             </Form.Item>
                         </Col>
@@ -313,12 +342,12 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24} sm={12}>
-                            <Form.Item label="Party A" name="nameA" rules={[{ required: true, message: 'Please fill in Party A!' }]}>
+                            <Form.Item label="Party A" name="TenDN_A" rules={[{ required: true, message: 'Please fill in Party A!' }]}>
                                 <AntInput placeholder="Party A" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={12}>
-                            <Form.Item label="Party B" name="nameB" rules={[{ required: true, message: 'Please fill in Party B!' }]}>
+                            <Form.Item label="Party B" name="TenDN_B" rules={[{ required: true, message: 'Please fill in Party B!' }]}>
                                 <AntInput placeholder="Party B" />
                             </Form.Item>
                         </Col>
@@ -326,7 +355,7 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24}>
-                            <Form.Item label="Purpose" name="purpose" rules={[{ required: true, message: 'Please enter purpose!' }]}>
+                            <Form.Item label="Purpose" name="muc_dich" rules={[{ required: true, message: 'Please enter purpose!' }]}>
                                 <TextArea rows={4} placeholder="Purpose" />
                             </Form.Item>
                         </Col>
@@ -334,7 +363,7 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24}>
-                            <Form.Item label="Principle" name="principle" rules={[{ required: true, message: 'Please enter principle!' }]}>
+                            <Form.Item label="Principle" name="nguyen_tac" rules={[{ required: true, message: 'Please enter principle!' }]}>
                                 <TextArea rows={4} placeholder="Principle" />
                             </Form.Item>
                         </Col>
@@ -342,7 +371,7 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={16} justify="space-between" align="middle">
                         <Col xs={24} sm={12}>
-                            <Form.Item label="Status" name="status" rules={[{ required: true, message: 'Please select status!' }]}>
+                            <Form.Item label="Status" name="trang_thai" rules={[{ required: true, message: 'Please select status!' }]}>
                                 <Select
                                     placeholder="Select status"
                                     onChange={(value) => {
@@ -358,7 +387,7 @@ const ManagingMOU: React.FC = () => {
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={8}>
-                            <Form.Item label="Progress (%)">
+                            <Form.Item label="Construction progress"name="PhanTramTienDo">
                                 <InputNumber
                                     min={0}
                                     max={100}
@@ -387,7 +416,7 @@ const ManagingMOU: React.FC = () => {
             <Modal
                 title="Edit MOU"
                 open={isEditModalOpen}
-                onOk={handleEdit}
+                onOk={() => handleEdit()} // Gọi handleEdit() mà không truyền sự kiện
                 onCancel={handleCancel}
                 centered
                 okText="Save"
@@ -397,7 +426,7 @@ const ManagingMOU: React.FC = () => {
                 <Form form={editForm} layout="vertical">
                     <Row gutter={10}>
                         <Col xs={24}>
-                            <Form.Item label="Title" name="description" rules={[{ required: true, message: 'Please enter title!' }]}>
+                            <Form.Item label="Title" name="tieu_de" rules={[{ required: true, message: 'Please enter title!' }]}>
                                 <AntInput placeholder="Please enter title!" />
                             </Form.Item>
                         </Col>
@@ -405,22 +434,22 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24} sm={6}>
-                            <Form.Item label="Code" name="ID" rules={[{ required: true, message: 'Please enter MOU code!' }]}>
+                            <Form.Item label="Code" name="ma_mou" rules={[{ required: true, message: 'Please enter MOU code!' }]}>
                                 <AntInput placeholder="Please enter MOU code!" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={6}>
-                            <Form.Item label="Academic year" name="academicYear" rules={[{ required: true, message: 'Please enter academic year!' }]}>
+                            <Form.Item label="Academic year" name="nam_hoc" rules={[{ required: true, message: 'Please enter academic year!' }]}>
                                 <AntInput type="number" placeholder="Please enter academic year!" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={6}>
-                            <Form.Item label="Start Date" name="startDate" rules={[{ required: true, message: 'Select start date' }]}>
+                            <Form.Item label="Start Date" name="startDate" rules={[{ required: false, message: 'Select start date' }]}>
                                 <DatePicker style={{ width: '100%' }} placeholder="Start Date" onChange={(date) => editForm.setFieldsValue({ startDate: date })} />
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={6}>
-                            <Form.Item label="End Date" name="endDate" rules={[{ required: true, message: 'Select end date' }]}>
+                            <Form.Item label="End Date" name="endDate" rules={[{ required: false, message: 'Select end date' }]}>
                                 <DatePicker style={{ width: '100%' }} placeholder="End Date" onChange={(date) => editForm.setFieldsValue({ endDate: date })} />
                             </Form.Item>
                         </Col>
@@ -428,12 +457,12 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24} sm={12}>
-                            <Form.Item label="Party A" name="nameA" rules={[{ required: true, message: 'Please fill in Party A!' }]}>
+                            <Form.Item label="Party A" name="TenDN_A" rules={[{ required: true, message: 'Please fill in Party A!' }]}>
                                 <AntInput placeholder="Party A" />
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={12}>
-                            <Form.Item label="Party B" name="nameB" rules={[{ required: true, message: 'Please fill in Party B!' }]}>
+                            <Form.Item label="Party B" name="TenDN_B" rules={[{ required: true, message: 'Please fill in Party B!' }]}>
                                 <AntInput placeholder="Party B" />
                             </Form.Item>
                         </Col>
@@ -441,7 +470,7 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24}>
-                            <Form.Item label="Purpose" name="purpose" rules={[{ required: true, message: 'Please enter purpose!' }]}>
+                            <Form.Item label="Purpose" name="muc_dich" rules={[{ required: true, message: 'Please enter purpose!' }]}>
                                 <TextArea rows={4} placeholder="Purpose" />
                             </Form.Item>
                         </Col>
@@ -449,7 +478,7 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={10}>
                         <Col xs={24}>
-                            <Form.Item label="Principle" name="principle" rules={[{ required: true, message: 'Please enter principle!' }]}>
+                            <Form.Item label="Principle" name="nguyen_tac" rules={[{ required: true, message: 'Please enter principle!' }]}>
                                 <TextArea rows={4} placeholder="Principle" />
                             </Form.Item>
                         </Col>
@@ -457,7 +486,7 @@ const ManagingMOU: React.FC = () => {
 
                     <Row gutter={16} justify="space-between" align="middle">
                         <Col xs={24} sm={12}>
-                            <Form.Item label="Status" name="status" rules={[{ required: true, message: 'Please select status!' }]}>
+                            <Form.Item label="Status" name="trang_thai" rules={[{ required: true, message: 'Please select status!' }]}>
                                 <Select
                                     placeholder="Select status"
                                     onChange={(value) => {
@@ -473,7 +502,7 @@ const ManagingMOU: React.FC = () => {
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={8}>
-                            <Form.Item label="Progress (%)">
+                            <Form.Item label="Construction progress" name="PhanTramTienDo">
                                 <InputNumber
                                     min={0}
                                     max={100}
@@ -505,3 +534,43 @@ export default ManagingMOU;
 
 
 
+   // Hiển thị modal Edit
+//    const showEditModal = (record: DataType) => {
+
+//     const periodParts = record.period?.split(" - ") || [];
+//     const startDate = periodParts[0] ? dayjs(periodParts[0], "DD/MM/YY") : dayjs();
+//     const endDate = periodParts[1] ? dayjs(periodParts[1], "DD/MM/YY") : dayjs();
+    
+//     editForm.setFieldsValue({
+//         ...record,
+//         progress: parseInt(record.progress),
+//         status: record?.Status?.toLowerCase() || "",
+//         startDate: startDate,
+//         endDate: endDate,
+//     });
+
+//     setEditingRecord(record);
+//     setIsEditModalOpen(true);
+//     console.log(isEditModalOpen);
+//     setStartDate(startDate);
+//     setEndDate(endDate);
+// };
+
+
+//   // Hàm Edit
+//   const handleEdit = () => {
+//     editForm.validateFields().then(values => {
+//         const updatedData = {
+//             ...editingRecord,
+//             ...values,
+//             progress: values.status === 'completed' ? '100%' : values.status === 'in_progress' ? `${progress}%` : '0%',
+//             period: `${values.startDate?.format('DD/MM/YY')} - ${values.endDate?.format('DD/MM/YY')}`
+//         };
+
+//         setFilteredData(prevData =>
+//             prevData.map(item => (item.key === editingRecord?.key ? updatedData : item))
+//         );
+//         editForm.resetFields();
+//         setIsEditModalOpen(false);
+//     });
+// };

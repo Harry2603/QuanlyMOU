@@ -16,9 +16,12 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 import { useConfirm } from '../../hooks'
 import { apiUtil } from '../../utils'
-import { useAppState } from './../../hooks'
-import { ModalChangePassword } from './components'
+import { useAppState } from '../../hooks'
+import ModalChangePassword from './components/ModalChangePassword';
 import styles from './style.module.css'
+
+
+
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -27,19 +30,19 @@ function getItem(
     key: React.Key,
     icon?: React.ReactNode,
     children?: MenuItem[],
-): MenuItem {
+  ): MenuItem {
     return {
-        key,
-        icon,
-        children,
-        label,
+      key,
+      icon,
+      children,
+      label,
     } as MenuItem;
-}
-
+  }
+  
 
 const { Header, Content, Sider } = Layout
 
-const AppLayout = (): React.JSX.Element => {
+const UserLayout = (): React.JSX.Element => {
     const {
         token: { colorBgContainer },
     } = theme.useToken()
@@ -54,27 +57,7 @@ const AppLayout = (): React.JSX.Element => {
 
     const [title, setTitle] = useState<string>('')
 
-    const [roleId, setRoleId] = useState<number>()
-
     const [isShowModalChangePassword, setIsShowModalChangePassword] = useState(false)
-
-    const getUserInfo = (): any | null => {
-        const userInfoString = localStorage.getItem('userInfo');
-        try {
-            if (userInfoString) {
-                return JSON.parse(userInfoString);
-            }
-            return null;
-        } catch (error) {
-            console.error('Error parsing userInfo from localStorage:', error);
-            return null;
-        }
-    }
-
-    useEffect(() => {
-        const userInfo = getUserInfo()
-        setRoleId(userInfo?.RoleId)
-    }, [])
 
     useEffect(() => {
         const pathname = location.pathname.slice(1)
@@ -140,33 +123,11 @@ const AppLayout = (): React.JSX.Element => {
         })
     }, [])
 
-    const items: MenuItem[] = [
-    
-        getItem('ManagingMOU', 'managing-mou', <MenuUnfoldOutlined />, [
-            ...(roleId === 1 || roleId === 2
-              ? [getItem(<Link to="/Managing-MOU/documentlist">DocumnetList</Link>, 'documentlist', <FileOutlined />)]
-              : []),
-            getItem(<Link to="/Managing-MOU/mou">MOU</Link>, 'mou', <FileOutlined />),
-            getItem(<Link to="/Managing-MOU/wordeditor">WordEditor</Link>, 'word-editor'),
-          ]),
-        getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
-            getItem(<Link to="/ManagingAccount/user-account">List of User</Link>, 'user-list'),
-            getItem(<Link to="/ManagingAccount/admin-account">List of Admin</Link>, 'admin-list'),
-            getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list'),
-        ]),
-    
-        getItem('ManagingStudent', 'student-group', <UserOutlined />, [
-            getItem(<Link to="/ManagingStudent/post-graduate">ListOfPostGraduateStudent</Link>, 'ListOfPostGraduateStudent'),
-            getItem(<Link to="/ManagingStudent/graduates">TheNumberOfGraduates</Link>, 'TheNumberOfGraduates'),
-            getItem(<Link to="/ManagingStudent/alumni">ComprehensiveAlumniManagement</Link>, 'Comprehensive Alumni Management'),
-            getItem(<Link to="/ManagingStudent/dashboard-csv">DashboardCSV</Link>, 'dashboard-csv', <DashboardOutlined />),
-        ]),
-    ];
-
     return (
+
         <Fragment>
             <Input addonBefore='' hidden />
-            <Layout>
+            <Layout><Outlet />
                 <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)} style={{ height: '100vh' }}>
                     <div
                         style={{
@@ -176,7 +137,7 @@ const AppLayout = (): React.JSX.Element => {
                             borderRadius: 6,
                         }}>
                         <div className={styles.textLogo}>{collapsed ? 'MOU' : 'Quản lý MOU'}</div>
-
+                        
                     </div>
                     <Menu
                         theme='dark'
@@ -201,10 +162,10 @@ const AppLayout = (): React.JSX.Element => {
                                 position: 'relative',
                             }}>
                             <div>
-                                {/* type='text' */}
-                                {/* // icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                                    {/* type='text' */}
+                                    {/* // icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                                     // onClick={() => setCollapsed(!collapsed)} */}
-                                {/* style={{ fontSize: 16, width: 64, height: 64 }} */}
+                                    {/* style={{ fontSize: 16, width: 64, height: 64 }} */}
 
                                 <span style={{ fontSize: 18, fontWeight: 600 }}>{title}</span>
                             </div>
@@ -234,7 +195,12 @@ const AppLayout = (): React.JSX.Element => {
     )
 }
 
-export default AppLayout
+export default UserLayout
 
 // Danh sách menu có submenu
-
+const items: MenuItem[] = [
+    getItem('UserView', 'userview-group', <SettingOutlined />, [
+        getItem(<Link to="/UserView/mou">List of User</Link>, 'mou-list'),
+        getItem(<Link to="/Managing-MOU/create">Creat new MOU</Link>, 'editor'),
+    ]),
+  ];
