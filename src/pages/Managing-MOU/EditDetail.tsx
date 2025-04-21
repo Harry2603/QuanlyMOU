@@ -3,10 +3,6 @@ import {
     DocumentEditorContainerComponent,
     Toolbar,
     Inject,
-    DocumentEditorComponent,
-    DocumentEditor,
-    WordExport,
-    SfdtExport,
 } from '@syncfusion/ej2-react-documenteditor';
 import './WordEditor.css';
 import { Modal, Button } from 'antd';
@@ -15,11 +11,21 @@ import { apiUtil } from '../../utils';
 interface EditDetailProps {
     isModalOpen: boolean;
     Url: string | null;
+    fileID: number | undefined
     onClose: () => void;
+    onFetch: () => void
+}
+
+interface FileDetail {
+    FileID: number
+    FileName: string
+    Url: string
+    FullUrl: string
+    author: string
 }
 
 
-const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose }) => {
+const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, fileID, onFetch }) => {
     const editorRef = useRef<DocumentEditorContainerComponent>(null)
     const [isFullyOpen, setIsFullyOpen] = useState(false)
 
@@ -38,24 +44,40 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose }) =>
         if (!sfdt) return;
 
         try {
+            const isSelectDetail = await apiUtil.auth.queryAsync('FileData_Select_ById', { FileID: fileID })
+
+            if (!isSelectDetail.IsSuccess) {
+                Modal.error({ content: 'Lỗi khi tải dữ liệu chi tiết.' })
+                return
+            }
+
+            const detail: any = isSelectDetail.Result as FileDetail
+
+            if(detail.lenght < 0){
+                Modal.error({ content: 'detail không có dữ liệu' })
+                return
+            }
+
             const blob = new Blob([sfdt], { type: 'application/json' });
-            const filename = `edited_document_${Date.now()}.sfdt`;
+            const filename = `${detail[0].FileName}.txt`;
             const file = new File([blob], filename, { type: blob.type });
 
             const uploadResp = await apiUtil.auth.uploadFileAsync(file);
-
+            console.log("xxxxxxxxx", detail);
             if (uploadResp.IsSuccess) {
                 const data = {
+                    FileID: detail[0].FileID,
                     FileName: filename,
                     Url: uploadResp.Result?.Url,
                     FullUrl: uploadResp.Result?.FullUrl,
-                    author: "", // em có thể dùng input hoặc username nếu có
+                    author: detail[0].author, // em có thể dùng input hoặc username nếu có
                 };
 
-                const insertResp = await apiUtil.auth.queryAsync('FileData_Insert', data);
+                const insertResp = await apiUtil.auth.queryAsync('FileData_Update', data);
 
                 if (insertResp.IsSuccess) {
                     Modal.success({ content: 'Tài liệu đã được lưu thành công!' });
+                    onFetch()
                     onClose(); // đóng modal sau khi lưu
                 } else {
                     Modal.error({ content: 'Lỗi khi lưu dữ liệu vào database.' });
@@ -69,7 +91,30 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose }) =>
         }
     };
 
+    const fetchData = async () => {
+        if (!Url) {
+            Modal.error({ content: 'URL không hợp lệ.' });
+            return
+        }
 
+        const response = await fetch(Url);
+
+        // Check if the fetch was successful
+        if (!response.ok) {
+            console.error("Failed to fetch the file");
+            return;
+        }
+
+        // Convert the response to text
+        const text = await response.text();
+        // console.error("Text content:", text);
+
+        if (editorRef.current && editorRef.current.documentEditor) {
+            editorRef.current.documentEditor.open(text);
+        } else {
+            console.warn("editorRef or documentEditor is not ready yet.");
+        }
+    }
 
     // useEffect(() => {
     //     if (Url && editorRef.current?.documentEditor) {
@@ -84,7 +129,17 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose }) =>
     //     }
     //   }, [Url]);
 
-
+    useEffect(() => {
+        if (isModalOpen) {
+            console.log("opened!!!");
+            setTimeout(() => {
+                setIsFullyOpen(true)
+                setTimeout(async () => {
+                    fetchData()
+                }, 0);
+            }, 500)
+        }
+    }, [isModalOpen])
 
     return (
         <Modal
@@ -94,28 +149,16 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose }) =>
             onCancel={handleCancel}
             footer={null}
             width="80%"
-            afterOpenChange={(value) => {
-                if (value) {
-                    setTimeout(() => {
-                        setIsFullyOpen(true)
-                        setTimeout (async() => {
-                            const response = await fetch(Url);
-
-                            // Check if the fetch was successful
-                            if (!response.ok) {
-                                console.error("Failed to fetch the file");
-                                return;
-                            }
-
-                            // Convert the response to text
-                            const text = await response.text();
-                            console.error("Text content:", text);
-                        
-                            editorRef.current.documentEditor.open(text);
-                        }, 0);
-                    }, 500)
-                }
-            }}
+            // afterOpenChange={(value) => {
+            //     if (value) {
+            //         setTimeout(() => {
+            //             setIsFullyOpen(true)
+            //             setTimeout(async () => {
+            //                 fetchData()
+            //             }, 0);
+            //         }, 500)
+            //     }
+            // }}
             style={{ top: 20 }}
         >
             {isFullyOpen ? (

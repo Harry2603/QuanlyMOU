@@ -13,9 +13,11 @@ const App: React.FC = () => {
     const navigate = useNavigate(); // điều hướng đến WordEditor
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editUrl, setEditUrl] = useState<string | null>(null); // Thêm dòng này
+    const [selectedFileId, setSelectedFileId] = useState<number>()
 
-    const handleEdit = (fileUrl: string) => {
-        setEditUrl(fileUrl);
+    const handleEdit = (record: any) => {
+        setEditUrl(record.FullUrl);
+        setSelectedFileId(record.FileID);
         setIsModalOpen(true);
     };
     const showModal = () => {
@@ -30,22 +32,22 @@ const App: React.FC = () => {
         setIsModalOpen(false);
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await apiUtil.auth.queryAsync('FileData_Select', {});
-                if (res.IsSuccess) {
-                    const result = (res.Result as any[]).map((item: any, index: number) => ({
-                        ...item,
-                        key: index,
-                    }));
-                    setDataSource(result);
-                }
-            } catch (err) {
-                console.error("Error fetching file list:", err);
+    const fetchData = async () => {
+        try {
+            const res = await apiUtil.auth.queryAsync('FileData_Select', {});
+            if (res.IsSuccess) {
+                const result = (res.Result as any[]).map((item: any, index: number) => ({
+                    ...item,
+                    key: index,
+                }));
+                setDataSource(result);
             }
-        };
+        } catch (err) {
+            console.error("Error fetching file list:", err);
+        }
+    };
 
+    useEffect(() => {
         fetchData();
     }, []);
 
@@ -68,7 +70,7 @@ const App: React.FC = () => {
             key: 'action',
             render: (_: any, record: any) => (
                 <Space size="middle">
-                    <a onClick={() => handleEdit(record.FullUrl)}>Edit</a>
+                    <a onClick={() => handleEdit(record)}>Edit</a>
 
                     <a onClick={() => setPreviewUrl(record.FullUrl)}>Xem trước</a>
                 </Space>
@@ -101,6 +103,8 @@ const App: React.FC = () => {
             <EditDetail
                 isModalOpen={isModalOpen}
                 Url={editUrl}
+                fileID={selectedFileId}
+                onFetch={() => fetchData()}
                 onClose={() => setIsModalOpen(false)}
             />
 
