@@ -37,30 +37,7 @@ const WordEditor: React.FC = () => {
     }
   };
 
-  // const onSave = () => {
-  //   const editor = (editorRef.current as any)?.documentEditor;
-  //   if (editor) {
-  //     editor.saveAsBlob("Docx").then((blob: Blob) => {
-  //       console.log("📄 Blob file output:", blob);
-
-  //       const filename = "document.docx";
-  //       const file = new File([blob], filename, { type: blob.type });
-
-  //       apiUtil.auth
-  //         .uploadFileAsync(file)
-  //         .then((resp) => {
-  //           console.log("✅ Upload response:", resp);
-  //         })
-  //         .catch((err) => {
-  //           console.error("❌ Upload failed:", err);
-  //         });
-  //     });
-  //   } else {
-  //     console.warn("⚠️ DocumentEditor is not ready.");
-  //   }
-  // }
-
-  const handleConfirmUpload = async () => {
+  const handleConfirmSave = async () => {
     setIsLoading(true)
     console.log("filename author", filename, author);
 
@@ -85,7 +62,7 @@ const WordEditor: React.FC = () => {
 
       // Goi api upload file lên server
       const resp = await apiUtil.auth.uploadFileAsync(file);
-      console.log("✅ Upload response:", resp);
+      console.log("Upload response:", resp);
 
       if (resp.IsSuccess) {
         const data = {
@@ -101,18 +78,18 @@ const WordEditor: React.FC = () => {
         if (isInsert.IsSuccess) {
           setIsLoading(false)
 
-          console.log("✅ File inserted successfully");
+          console.log("File inserted successfully");
         } else {
           setIsLoading(false)
-          console.error("❌ Failed to insert file data");
+          console.error("Failed to insert file data");
         }
       } else {
         setIsLoading(false)
-        console.error("❌ Upload was not successful");
+        console.error("Upload was not successful");
       }
     } catch (err) {
       setIsLoading(false)
-      console.error("❌ Error during upload or insert:", err);
+      console.error("Error during upload or insert:", err);
     }
   };
 
@@ -120,10 +97,10 @@ const WordEditor: React.FC = () => {
     <div style={{ height: '100vh' }}>
       <Button onClick={() => setShowDialog(true)}>Save as blob</Button>
       <Button onClick={onDownload}>Save doc</Button>
-      <Modal title="Basic Modal" open={showDialog} onOk={handleConfirmUpload} onCancel={() => setShowDialog(false)} confirmLoading={isLoading}>
+      <Modal title="Basic Modal" open={showDialog} onOk={handleConfirmSave} onCancel={() => setShowDialog(false)} confirmLoading={isLoading}>
         <div className="p-4 space-y-4">
           <div>
-            <label className="block mb-1">Tên file:</label>
+            <label className="block mb-1">File Name:</label>
             <input
               type="text"
               className="w-full border px-2 py-1 rounded"
@@ -132,7 +109,7 @@ const WordEditor: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">Tác giả:</label>
+            <label className="block mb-1">Author:</label>
             <input
               type="text"
               className="w-full border px-2 py-1 rounded"
