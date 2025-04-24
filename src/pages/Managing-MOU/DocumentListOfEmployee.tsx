@@ -4,17 +4,17 @@ import { Space, Table, Button, Input, Typography, Tag, Modal } from 'antd';
 import { DownloadOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiUtil } from '../../utils';
-import EditDetail from './EditDetail';
 import {
     DocumentEditorComponent,
     WordExport,
     // PdfExport,
     SfdtExport
 } from '@syncfusion/ej2-react-documenteditor';
+import EditDetailOfEmployee from './EditDetailOfEmployee';
 
 DocumentEditorComponent.Inject(WordExport, SfdtExport)
 
-const App: React.FC = () => {
+const DocumentListOfEmployee: React.FC = () => {
     const [dataSource, setDataSource] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,21 +24,7 @@ const App: React.FC = () => {
     const { Search } = Input;
     const [filteredData, setFilteredData] = useState<DataType[]>([]);
     const [fileDataSelect, setFileDataSelect] = useState<FileDataType | null>(null)
-    const [username, setUsername] = useState<string>()
     const { Title } = Typography;
-
-    const getUserInfo = (): UserInfoType | null => {
-        const userInfoString = localStorage.getItem('userInfo');
-        try {
-            if (userInfoString) {
-                return JSON.parse(userInfoString);
-            }
-            return null;
-        } catch (error) {
-            console.error('Error parsing userInfo from localStorage:', error);
-            return null;
-        }
-    }
 
     const loadAndDownload = async (format: 'Docx', fullUrl: string) => {
         try {
@@ -92,42 +78,40 @@ const App: React.FC = () => {
         }
     };
 
-    const A_approved = async (record: FileDataType) => {
-        const data = {
-            FileID: record.FileID,
-            FileStatus: 3
-        }
+    // const A_approved = async (record: FileDataType) => {
+    //     const data = {
+    //         FileID: record.FileID,
+    //         FileStatus: 3
+    //     }
 
-        await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
-            Modal.success({ content: 'A signed!' })
-            fetchData()
+    //     await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
+    //         Modal.success({ content: 'A signed!' })
+    //         fetchData()
 
-        }).catch(error => {
-            console.log("Fail to update file status", error);
-            Modal.error({ content: 'Fail to sign!' })
-        })
-    }
+    //     }).catch(error => {
+    //         console.log("Fail to update file status", error);
+    //         Modal.error({ content: 'Fail to sign!' })
+    //     })
+    // }
 
-    const B_approved = async (record: FileDataType) => {
-        const data = {
-            FileID: record.FileID,
-            FileStatus: 4
-        }
+    // const B_approved = async (record: FileDataType) => {
+    //     const data = {
+    //         FileID: record.FileID,
+    //         FileStatus: 4
+    //     }
 
-        await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
-            Modal.success({ content: 'B signed!' })
-            fetchData()
+    //     await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
+    //         Modal.success({ content: 'B signed!' })
+    //         fetchData()
 
-        }).catch(error => {
-            console.log("Fail to update file status", error);
-            Modal.error({ content: 'Fail to sign!' })
-        })
-    }
+    //     }).catch(error => {
+    //         console.log("Fail to update file status", error);
+    //         Modal.error({ content: 'Fail to sign!' })
+    //     })
+    // }
 
     useEffect(() => {
         fetchData();
-        const userInfo = getUserInfo()
-        setUsername(userInfo?.UserName)
     }, []);
 
     // Hàm Search
@@ -177,17 +161,19 @@ const App: React.FC = () => {
             ellipsis: true,
             render: (_: any, record: any) => {
                 if (!record.Status_Side) {
-                  return <Tag color="yellow">Writing</Tag>;
+                    return <Tag color="yellow">Writing</Tag>;
                 } else if (record.Status_Side && !record.Status_BothSide) {
-                  return <Tag color="yellow">One side finished</Tag>;
-                } else if (record.Status_BothSide && (record.Status_SignatureA || record.Status_SignatureB) && !(record.Status_SignatureA && record.Status_SignatureB)) {
-                  return <Tag color="green">On side Approved</Tag>;
-                } else if (record.Status_SignatureA && record.Status_SignatureB) {
-                  return <Tag color="green">Both Sides Approved</Tag>;
+                    return <Tag color="yellow">One side finished</Tag>;
+                } else if (record.Status_BothSide && !record.Status_SignatureA && !record.Status_SignatureB) {
+                    return <Tag color="green">Waiting to approve</Tag>;
+                } else if (record.Status_SignatureA && !record.Status_SignatureB) {
+                    return <Tag color="green">On side Approved</Tag>;
+                } else if (record.Status_SignatureB) {
+                    return <Tag color="green">Both Sides Approved</Tag>;
                 } else {
-                  return <Tag color="default">Unknown</Tag>;
+                    return <Tag color="default">Unknown</Tag>;
                 }
-              }              
+            },
         },
         {
             title: 'Author',
@@ -195,20 +181,7 @@ const App: React.FC = () => {
             key: 'NguoiTao',
             width: '20%',
             ellipsis: true,
-            render: (text: string, record: FileDataType) => (
-                <div>
-                    <p>{text}</p>
-                    <Button
-                        disabled={ record.Status_SignatureA || username !== record.UsernameAuthor}
-                        type="primary"
-                        size="middle" // hoặc "small" / "large"
-                        onClick={() => A_approved(record)}
-                        className="px-4 py-2 bg-green-600 text-white rounded"
-                    >
-                        Approve
-                    </Button>
-                </div>
-            ),
+            render: (text: string) => <span>{text}</span>,
         },
         {
             title: 'Partner',
@@ -216,20 +189,7 @@ const App: React.FC = () => {
             key: 'TenPartner',
             width: '20%',
             ellipsis: true,
-            render: (text: string, record: FileDataType) => (
-                <div>
-                    <p>{text}</p>
-                    <Button
-                        disabled={record.Status_SignatureB || username !== record.UsernamePartner}
-                        type="primary"
-                        size="middle" // hoặc "small" / "large"
-                        onClick={() => B_approved(record)}
-                        className="px-4 py-2 bg-green-600 text-white rounded"
-                    >
-                        Approve
-                    </Button>
-                </div>
-            ),
+            render: (text: string) => <span>{text}</span>,
         },
         {
             title: 'Action',
@@ -256,7 +216,7 @@ const App: React.FC = () => {
     return (
         <>
             <div>
-                <Title level={3}>List of MOU</Title>
+                <Title level={3}>List of Template MOU</Title>
                 <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
                     <Search
                         placeholder="Search description"
@@ -268,7 +228,7 @@ const App: React.FC = () => {
                     />
                 </div>
                 <Table columns={columns} dataSource={dataSource} loading={loading} />
-                <EditDetail
+                <EditDetailOfEmployee
                     isModalOpen={isModalOpen}
                     Url={editUrl}
                     fileID={selectedFileId}
@@ -293,4 +253,4 @@ const App: React.FC = () => {
     );
 };
 
-export default App;
+export default DocumentListOfEmployee;

@@ -5,7 +5,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import './App.css'
 import { AppLayout } from './components'
 import { useAppState } from './hooks'
-import { DocumentList, ManagingMOU, LoginPage, ListofUser, ListofAdmin, ListOfPostGraduateStudent, DashboardCSV, TheNumberOfGraduates, ComprehensiveAlumniManagement,WordEditor} from './pages'
+import { DocumentList,Template,DocumentListOfEmployee, LoginPage, ListOfCompany, ListofAdmin, ListOfPostGraduateStudent, TheNumberOfGraduates, ComprehensiveAlumniManagement,WordEditor} from './pages'
 import RegisterPage from './pages/login-page/RegisterPage'
  
 function App() {
@@ -31,12 +31,13 @@ function App() {
 
                                 <Route path='Managing-MOU' element={<Outlet />}>
                                     <Route path='documentlist' element={<DocumentList/>} />
-                                    <Route path='mou' element={<ManagingMOU />} />
+                                    <Route path='template' element={<Template/>} />
+                                    <Route path='documentlistofemployee' element={<DocumentListOfEmployee />} />
                                     <Route path='wordeditor' element={<WordEditor />}/>
                                 </Route>
 
                                 <Route path='ManagingAccount' element={<Outlet />}>
-                                    <Route path='user-account' element={<ListofUser />} />
+                                    <Route path='listofcompany' element={<ListOfCompany />} />
                                     <Route path='admin-account' element={<ListofAdmin />} />
                                     <Route path='register' element={<RegisterPage />} />
                                 </Route>
@@ -45,7 +46,7 @@ function App() {
                                     <Route path='post-graduate' element={<ListOfPostGraduateStudent />} />
                                     <Route path='graduates' element={<TheNumberOfGraduates />} />
                                     <Route path='alumni' element={<ComprehensiveAlumniManagement />} />
-                                    <Route path='dashboard-csv' element={<DashboardCSV />} />
+                                    {/* <Route path='dashboard-csv' element={<DashboardCSV />} /> */}
                                 </Route>
                             </Route>
                         </Route>

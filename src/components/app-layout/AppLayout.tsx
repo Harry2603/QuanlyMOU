@@ -141,26 +141,57 @@ const AppLayout = (): React.JSX.Element => {
     }, [])
 
     const items: MenuItem[] = [
-    
+
         getItem('ManagingMOU', 'managing-mou', <MenuUnfoldOutlined />, [
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/Managing-MOU/documentlist">DocumnetList</Link>, 'documentlist', <FileOutlined />)]
+                : []),
+
             ...(roleId === 1 || roleId === 2
-              ? [getItem(<Link to="/Managing-MOU/documentlist">DocumnetList</Link>, 'documentlist', <FileOutlined />)]
-              : []),
-            getItem(<Link to="/Managing-MOU/mou">MOU</Link>, 'mou', <FileOutlined />),
-            getItem(<Link to="/Managing-MOU/wordeditor">WordEditor</Link>, 'word-editor'),
-          ]),
-        getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
-            getItem(<Link to="/ManagingAccount/user-account">List of User</Link>, 'user-list'),
-            getItem(<Link to="/ManagingAccount/admin-account">List of Admin</Link>, 'admin-list'),
-            getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list'),
+                ? [getItem(<Link to="/Managing-MOU/documentlistofemployee">Document List Of Employee</Link>, 'documentlistofemployee', <FileOutlined />)]
+                : []),
+
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/Managing-MOU/template">Template</Link>, 'template', <FileOutlined />)]
+                : []),
+
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/Managing-MOU/wordeditor">WordEditor</Link>, 'word-editor')]
+                : []),
         ]),
-    
-        getItem('ManagingStudent', 'student-group', <UserOutlined />, [
-            getItem(<Link to="/ManagingStudent/post-graduate">ListOfPostGraduateStudent</Link>, 'ListOfPostGraduateStudent'),
-            getItem(<Link to="/ManagingStudent/graduates">TheNumberOfGraduates</Link>, 'TheNumberOfGraduates'),
-            getItem(<Link to="/ManagingStudent/alumni">ComprehensiveAlumniManagement</Link>, 'Comprehensive Alumni Management'),
-            getItem(<Link to="/ManagingStudent/dashboard-csv">DashboardCSV</Link>, 'dashboard-csv', <DashboardOutlined />),
-        ]),
+        ...(roleId !== 3
+            ? [
+                getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
+                    ...(roleId === 1 || roleId === 2 || roleId === 4
+                        ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany')]
+                        : []),
+
+                    ...(roleId === 1 || roleId === 2 || roleId === 4
+                        ? [getItem(<Link to="/ManagingAccount/admin-account">List of Admin</Link>, 'admin-list')]
+                        : []),
+
+                    ...(roleId === 1 || roleId === 2
+                        ? [getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list')] : []),
+                ]),
+            ]
+            : []),
+
+        ...(roleId !== 3
+            ? [
+
+                getItem('ManagingStudent', 'student-group', <UserOutlined />, [
+                    ...(roleId === 1 || roleId === 2 || roleId === 4
+                        ? [getItem(<Link to="/ManagingStudent/post-graduate">ListOfPostGraduateStudent</Link>, 'ListOfPostGraduateStudent')]
+                        : []),
+                    ...(roleId === 1 || roleId === 2 || roleId === 4
+                        ? [getItem(<Link to="/ManagingStudent/graduates">TheNumberOfGraduates</Link>, 'TheNumberOfGraduates')] : []),
+                    ...(roleId === 1 || roleId === 2 || roleId === 4
+                        ? [getItem(<Link to="/ManagingStudent/alumni">ComprehensiveAlumniManagement</Link>, 'Comprehensive Alumni Management')] : []),
+
+                    // getItem(<Link to="/ManagingStudent/dashboard-csv">DashboardCSV</Link>, 'dashboard-csv', <DashboardOutlined />),
+                ]),
+            ]
+            : []),
     ];
 
     return (
@@ -175,7 +206,7 @@ const AppLayout = (): React.JSX.Element => {
                             background: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: 6,
                         }}>
-                        <div className={styles.textLogo}>{collapsed ? 'MOU' : 'Quản lý MOU'}</div>
+                        <div className={styles.textLogo}>{collapsed ? 'MOU' : 'PROCESSOR MOU'}</div>
 
                     </div>
                     <Menu

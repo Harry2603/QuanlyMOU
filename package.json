@@ -13,6 +13,7 @@
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@react-oauth/google": "^0.12.1",
     "@syncfusion/ej2-base": "^29.1.36",
+    "@syncfusion/ej2-documenteditor": "^29.1.38",
     "@syncfusion/ej2-react-base": "^29.1.33",
     "@syncfusion/ej2-react-buttons": "^29.1.34",
     "@syncfusion/ej2-react-documenteditor": "^29.1.38",

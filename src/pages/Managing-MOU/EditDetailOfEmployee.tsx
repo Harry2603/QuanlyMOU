@@ -140,19 +140,6 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
         })
     }
 
-    // useEffect(() => {
-    //     if (Url && editorRef.current?.documentEditor) {
-    //       fetch(Url)
-    //         .then((res) => res.text())
-    //         .then((sfdtText) => {
-    //           editorRef.current?.documentEditor.open(sfdtText);
-    //         })
-    //         .catch((err) => {
-    //           console.error('❌ Lỗi khi mở file .sfdt:', err);
-    //         });
-    //     }
-    //   }, [Url]);
-
     useEffect(() => {
         if (isModalOpen) {
             setTimeout(() => {
@@ -202,7 +189,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             ) : null}
             <div style={{ marginTop: '10px', textAlign: 'right' }}>
                 <Space>
-                    <Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button>
+                    {/* <Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button> */}
                     <Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleSave}>Save</Button>
                 </Space>
             </div>

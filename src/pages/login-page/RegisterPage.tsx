@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form, Input, message } from "antd";
+import { Button, Form, Input, message, Select } from "antd";
 import { StandardForm } from "../../components";
 import { useNavigate } from "react-router-dom";
 import { apiUtil } from "../../utils";
@@ -7,12 +7,33 @@ import "./style.css";
 
 const RegisterPage: React.FC = () => {
     const [isBusy, setIsBusy] = useState(false);
+    const [doanhNghiepList, setDoanhNghiepList] = useState<DoanhNghiepType[]>([])
     const [form] = Form.useForm();
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token"); // Kiểm tra quyền admin
 
+    const roleList = [
+        {
+            label: 'Admin',
+            value: 1
+        },
+        {
+            label: 'Employee',
+            value: 2
+        },
+        {
+            label: 'Customer',
+            value: 3
+        },
+        {
+            label: 'President',
+            value: 4
+        }
+    ]
+
     // ✅ Kiểm tra quyền Admin
     useEffect(() => {
+
         // const checkAdminRole = async () => {
         //     if (!token) {
         //         message.error("Bạn không có quyền truy cập!");
@@ -30,18 +51,39 @@ const RegisterPage: React.FC = () => {
         // checkAdminRole();
     }, [token, navigate]);
 
+    const onLoadDoanhNghiep = async () => {
+        await apiUtil.auth.queryAsync<DoanhNghiepType[]>('DoanhNghiep_Select')
+            .then(resp => {
+                setDoanhNghiepList(
+                    resp.Result?.map(item => ({
+                        ...item,
+                        label: item.TenDN,
+                        value: item.DoanhNghiepID,
+                    })) || []
+                );
+            })
+            .catch((error) => {
+                console.error("Error loading doanh nghiep list:", error);
+            });
+    };
+
+
+    useEffect(() => {
+        onLoadDoanhNghiep()
+    }, [])
+
     const onFinish = async (formData: FieldType) => {
         setIsBusy(true);
-        const { Username, Password } = formData;
+        const { Username, Password, Role, DoanhNghiepID } = formData;
 
         try {
             //  1️ Kiểm tra Username đã tồn tại chưa
-            const checkResp = await apiUtil.auth.queryAsync("CheckUsernameExists", { Username });
-            if (checkResp?.IsSuccess && checkResp.Result) {
-                message.error("Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!");
-                setIsBusy(false);
-                return;
-            }
+            // const checkResp = await apiUtil.auth.queryAsync("CheckUsernameExists", { Username });
+            // if (checkResp?.IsSuccess && checkResp.Result) {
+            //     message.error("Tên đăng nhập đã tồn tại, vui lòng chọn tên khác!");
+            //     setIsBusy(false);
+            //     return;
+            // }
 
             // 2️ Gọi API để mã hóa mật khẩu
             const passwordResp = await apiUtil.user.generatePasswordAsync(Password);
@@ -51,19 +93,19 @@ const RegisterPage: React.FC = () => {
                 setIsBusy(false);
                 return;
             }
-            
+
             const passHash = passwordResp.Result as any
             console.log("pass", passHash.PasswordHash);
             //  3️⃣ Định nghĩa RoleId cho UsepasswordResp.Resultr
-            const RoleId = 2; // 2 = User, 1 = Admin
-            console.log("ủe name", Username );
+            console.log("ủe name", Username);
             //  4️ Gửi request đăng ký tài khoản
             const registerResp = await apiUtil.auth.queryAsync("CoreUsers_Insert", {
                 UserName: Username,
                 PasswordHash: passHash.PasswordHash,
                 FullName: Username,
                 Salt: passHash.Salt,
-                RoleId: RoleId,
+                RoleId: Role,
+                DoanhNghiepID: DoanhNghiepID
             });
             console.log("ín succ", registerResp);
 
@@ -121,6 +163,27 @@ const RegisterPage: React.FC = () => {
                         ]}>
                         <Input.Password placeholder="Xác nhận mật khẩu" />
                     </Form.Item>
+
+                    <Form.Item<FieldType>
+                        name="Role"
+                        hasFeedback
+                        rules={[
+                            { required: true, message: "Vui lòng chon quyen!" },
+                        ]}>
+                        <Select
+                            options={roleList}
+                        />
+                    </Form.Item>
+
+                    <Form.Item<FieldType>
+                        name="DoanhNghiepID"
+                        hasFeedback
+                    >
+                        <Select
+                            options={doanhNghiepList}
+                        />
+                    </Form.Item>
+
                     <Button type="primary" htmlType="submit" loading={isBusy} block>
                         Tạo tài khoản
                     </Button>
@@ -136,4 +199,6 @@ interface FieldType {
     Username: string;
     Password: string;
     ConfirmPassword: string;
+    Role: number
+    DoanhNghiepID: number
 }
