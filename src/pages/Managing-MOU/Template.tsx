@@ -1,10 +1,12 @@
-import { TableColumnsType, Button, Flex, Table, Typography, Input, Form, message } from 'antd';
+import { TableColumnsType, Button, Flex, Table, Typography, Input, Form, message, Modal } from 'antd';
 import StandardUploadFile from '../../components/StandardUploadFile';
 import { apiUtil } from '../../utils';
 import React, { useState, useEffect } from 'react';
+import { DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons';
+import EditDetail from './EditDetail';
 
 interface DataType {
-    TemplateID?: number; // thêm ? để không bắt buộc khi upload
+    TemplateID?: number // thêm ? để không bắt buộc khi upload
     Description: string
     FullUrl: string
     Url: string
@@ -13,6 +15,7 @@ interface UploadResult {
     IsSuccess: boolean
     Message: string
     Result: {
+        TemplateID?: number
         FileName: string;
         FullUrl: string;
         Url: string;
@@ -23,6 +26,11 @@ const Template: React.FC = () => {
 
     const [filteredData, setFilteredData] = useState<DataType[]>([]);
     const [Templatelist, setTemplateList] = useState<DataType[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [dataSource, setDataSource] = useState<any[]>([]);
+    const [fileDataSelect, setFileDataSelect] = useState<DataType | null>(null)
+    const [editUrl, setEditUrl] = useState<string | null>(null); // Thêm dòng này
+    const [selectedFileId, setSelectedFileId] = useState<number>()
     const [isLoading, setIsLoading] = useState(false);
     const { Search } = Input;
     const { Title } = Typography;
@@ -33,6 +41,67 @@ const Template: React.FC = () => {
         defaultName: null,
         defaultFullUrl: null
     })
+
+
+    // Xóa một Template
+    const handleDelete = (record: DataType) => {
+        if (record.TemplateID) {
+            Modal.confirm({
+                title: "Are you sure you want to delete this MOU?",
+                okText: "Yes",
+                cancelText: "No",
+                onOk: async () => {
+                    if (record.TemplateID)
+                        try {
+                            await onDeleteTemplate(record?.TemplateID); // Gọi API để xóa MOU
+                        } catch (error) {
+                            console.error("Lỗi khi xóa MOU:", error);
+                        }
+                },
+            });
+        }
+    };
+
+    const onDeleteTemplate = (TemplateID: number) => {
+        setIsLoading(true);
+
+        apiUtil.auth.queryAsync<{ IsSuccess: boolean }>('Template_Delete', { TemplateID }).then(resp => {
+            if (resp.IsSuccess) {
+                // Xóa thành công, cập nhật danh sách
+                setTemplateList(prevList => prevList.filter(item => item.TemplateID !== TemplateID));
+                setIsLoading(false);
+                console.log(`Doanh Nghiep với ID ${TemplateID} đã bị xóa`);
+            } else {
+                console.log(`Xóa Doanh Nghiệp thất bại`);
+            }
+        }).catch(error => {
+            console.error('Lỗi khi xóa Doanh Nghiệp:', error);
+            setIsLoading(false);
+        });
+    };
+
+    const handleEdit = (record: DataType) => {
+        window.open('/Managing-MOU/wordeditor?templateUrl='+ record.FullUrl);
+        // setEditUrl(record.FullUrl);
+        // setSelectedFileId(record.TemplateID);
+        // setFileDataSelect(record)
+        // setIsModalOpen(true);
+    };
+
+    const fetchData = async () => {
+        try {
+            const res = await apiUtil.auth.queryAsync('FileData_Select', {});
+            if (res.IsSuccess) {
+                const result = (res.Result as any[]).map((item: any, index: number) => ({
+                    ...item,
+                    key: index,
+                }));
+                setDataSource(result);
+            }
+        } catch (err) {
+            console.error("Error fetching file list:", err);
+        }
+    };
 
     const onLoadTemplateList = () => {
 
@@ -81,9 +150,8 @@ const Template: React.FC = () => {
         // Sau khi upload thành công và gán form xong => gọi insert luôn
         if (resp.IsSuccess) {
             try {
-                // const values = await form.validateFields();
-
                 const newTemplate: DataType = {
+                    // TemplateID:resp.Result?.TemplateID,
                     Description: resp.Result?.FileName,
                     FullUrl: resp.Result?.FullUrl,
                     Url: resp.Result?.Url
@@ -111,10 +179,11 @@ const Template: React.FC = () => {
     // Hàm Search
     const onSearch = (value: string) => {
         const keyword = value.toLowerCase();
-        const result = filteredData.filter(item =>
+        const result = Templatelist.filter(item =>
             item.Description.toLowerCase().includes(keyword)
         );
-        setFilteredData(result);
+        console.log("xxxxxxxxxxxxx", result);
+        setTemplateList(result);
     };
 
     // Cột Table
@@ -125,15 +194,18 @@ const Template: React.FC = () => {
             width: '15%',
             ellipsis: true,
             render: (_text, _record, index) => index + 1
-          },
+        },
         { title: 'Description', dataIndex: 'Description', key: 'Description' },
         {
             title: 'Action',
             key: 'action',
-            render: (_, _record) => (
+            render: (_: any, record: any) => (
                 <Flex gap="small" wrap>
-                    <Button type="primary">Choose</Button>
-                    <Button type="primary">Delete</Button>
+                    {/* <Button
+                        icon={<EditOutlined />}
+                        onClick={() => handleEdit(record)}></Button> */}
+                    <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
+                    <DeleteOutlined style={{ color: 'red' }} onClick={() => handleDelete(record)} />
                 </Flex>
             ),
         },
@@ -150,7 +222,7 @@ const Template: React.FC = () => {
                     onSearch={onSearch}
                     style={{ width: 300 }}
                 />
-                <p>{description.defaultName}</p>
+
                 <StandardUploadFile
                     onStart={() => {
                         console.log('onStart')
@@ -170,11 +242,21 @@ const Template: React.FC = () => {
                     >Upload</Button>
                 </StandardUploadFile>
             </div>
-            <Table<DataType> 
-            columns={columns} 
-            dataSource={Templatelist} 
-            loading={isLoading}
+            <Table<DataType>
+                columns={columns}
+                dataSource={Templatelist}
+                loading={isLoading}
             // rowKey={(record) => record.TemplateID.toString()} // Sử dụng TemplateID làm rowKey
+            />
+            <EditDetail
+                isCreate={true}
+                isHideEnd={false}
+                isModalOpen={isModalOpen}
+                Url={editUrl}
+                fileID={selectedFileId}
+                fileDataSelect={fileDataSelect ?? null}
+                onFetch={() => fetchData()}
+                onClose={() => setIsModalOpen(false)}
             />
         </div>
     );

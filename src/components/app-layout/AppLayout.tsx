@@ -6,7 +6,12 @@ import {
     MenuUnfoldOutlined,
     UserOutlined,
     FileOutlined,
-    SettingOutlined
+    SettingOutlined,
+    FolderOutlined,
+    FolderOpenOutlined,
+    FileWordOutlined,
+    IdcardOutlined,
+    UserAddOutlined
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { Button, Input, Layout, Menu, Space, theme } from 'antd'
@@ -143,16 +148,16 @@ const AppLayout = (): React.JSX.Element => {
     const items: MenuItem[] = [
 
         getItem('ManagingMOU', 'managing-mou', <MenuUnfoldOutlined />, [
-            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
-                ? [getItem(<Link to="/Managing-MOU/documentlist">DocumnetList</Link>, 'documentlist', <FileOutlined />)]
+            ...(roleId === 1 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/Managing-MOU/documentlist">DocumnetList</Link>, 'documentlist', <FolderOutlined/>)]
                 : []),
 
             ...(roleId === 1 || roleId === 2
-                ? [getItem(<Link to="/Managing-MOU/documentlistofemployee">Document List Of Employee</Link>, 'documentlistofemployee', <FileOutlined />)]
+                ? [getItem(<Link to="/Managing-MOU/documentlistofemployee">Document List Of Employee</Link>, 'documentlistofemployee',<FileWordOutlined />)]
                 : []),
 
             ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
-                ? [getItem(<Link to="/Managing-MOU/template">Template</Link>, 'template', <FileOutlined />)]
+                ? [getItem(<Link to="/Managing-MOU/template">Template</Link>, 'template', <FolderOpenOutlined/>)]
                 : []),
 
             ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
@@ -163,35 +168,35 @@ const AppLayout = (): React.JSX.Element => {
             ? [
                 getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
                     ...(roleId === 1 || roleId === 2 || roleId === 4
-                        ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany')]
+                        ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany',<IdcardOutlined />)]
                         : []),
 
-                    ...(roleId === 1 || roleId === 2 || roleId === 4
-                        ? [getItem(<Link to="/ManagingAccount/admin-account">List of Admin</Link>, 'admin-list')]
-                        : []),
+                    // ...(roleId === 1 || roleId === 2 || roleId === 4
+                    //     ? [getItem(<Link to="/ManagingAccount/admin-account">List of Admin</Link>, 'admin-list')]
+                    //     : []),
 
                     ...(roleId === 1 || roleId === 2
-                        ? [getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list')] : []),
+                        ? [getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list',<UserAddOutlined />)] : []),
                 ]),
             ]
             : []),
 
-        ...(roleId !== 3
-            ? [
+        // ...(roleId !== 3
+        //     ? [
 
-                getItem('ManagingStudent', 'student-group', <UserOutlined />, [
-                    ...(roleId === 1 || roleId === 2 || roleId === 4
-                        ? [getItem(<Link to="/ManagingStudent/post-graduate">ListOfPostGraduateStudent</Link>, 'ListOfPostGraduateStudent')]
-                        : []),
-                    ...(roleId === 1 || roleId === 2 || roleId === 4
-                        ? [getItem(<Link to="/ManagingStudent/graduates">TheNumberOfGraduates</Link>, 'TheNumberOfGraduates')] : []),
-                    ...(roleId === 1 || roleId === 2 || roleId === 4
-                        ? [getItem(<Link to="/ManagingStudent/alumni">ComprehensiveAlumniManagement</Link>, 'Comprehensive Alumni Management')] : []),
+        //         getItem('ManagingStudent', 'student-group', <UserOutlined />, [
+        //             ...(roleId === 1 || roleId === 2 || roleId === 4
+        //                 ? [getItem(<Link to="/ManagingStudent/post-graduate">ListOfPostGraduateStudent</Link>, 'ListOfPostGraduateStudent')]
+        //                 : []),
+        //             ...(roleId === 1 || roleId === 2 || roleId === 4
+        //                 ? [getItem(<Link to="/ManagingStudent/graduates">TheNumberOfGraduates</Link>, 'TheNumberOfGraduates')] : []),
+        //             ...(roleId === 1 || roleId === 2 || roleId === 4
+        //                 ? [getItem(<Link to="/ManagingStudent/alumni">ComprehensiveAlumniManagement</Link>, 'Comprehensive Alumni Management')] : []),
 
-                    // getItem(<Link to="/ManagingStudent/dashboard-csv">DashboardCSV</Link>, 'dashboard-csv', <DashboardOutlined />),
-                ]),
-            ]
-            : []),
+        //             // getItem(<Link to="/ManagingStudent/dashboard-csv">DashboardCSV</Link>, 'dashboard-csv', <DashboardOutlined />),
+        //         ]),
+        //     ]
+        //     : []),
     ];
 
     return (

@@ -8,7 +8,7 @@ import {
   SfdtExport,
 } from '@syncfusion/ej2-react-documenteditor';
 import './WordEditor.css';
-import { Button, Modal, Select } from 'antd';
+import { Button, Modal, Select, message } from 'antd';
 import type { ConfigProviderProps } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { apiUtil } from '../../utils';
@@ -41,45 +41,6 @@ const WordEditor: React.FC = () => {
     }
   }
 
-  const optionList = [
-    {
-      label: "1",
-      value: "1"
-    },
-    {
-      label: "2",
-      value: "2"
-    },
-    {
-      label: "3",
-      value: "3"
-    },
-    {
-      label: "4",
-      value: "4"
-    },
-    {
-      label: "5",
-      value: "5"
-    },
-    {
-      label: "6",
-      value: "6"
-    },
-    {
-      label: "7",
-      value: "7"
-    },
-    {
-      label: "8",
-      value: "8"
-    },
-    {
-      label: "9",
-      value: "9"
-    }
-  ]
-
   const onLoadUserList = async () => {
     await apiUtil.auth.queryAsync<UserListType[]>('CoreUser_Select')
       .then(resp => {
@@ -98,7 +59,70 @@ const WordEditor: React.FC = () => {
       });
   };
 
+  const fetchData = async (Url:string) => {
+    if (!Url) {
+      Modal.error({ content: "URL không hợp lệ." });
+      return;
+    }
+
+    const response = await fetch(Url);
+
+    if (!response.ok) {
+      console.error("Failed to fetch the file");
+      return;
+    }
+
+    let text: any;
+
+    const isDocxUrl = (url: string): boolean => {
+      try {
+        const parsedUrl = new URL(url);
+        const pathname = parsedUrl.pathname.toLowerCase();
+        return pathname.endsWith(".docx") || pathname.endsWith(".doc");
+      } catch (error) {
+        console.error("Invalid URL:", error);
+        return false;
+      }
+    };
+
+    if (isDocxUrl(Url)) {
+      const docxBlob = await response.blob();
+
+      console.log('Uploading DOCX to Syncfusion server...');
+
+      const formData = new FormData();
+      formData.append('UploadFiles', new File([docxBlob], 'uploaded.docx', {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      }));
+
+      const uploadResponse = await fetch('https://ej2services.syncfusion.com/production/web-services/api/documenteditor/Import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) throw new Error(`Failed to convert DOCX: ${uploadResponse.statusText}`);
+      const result = await uploadResponse.text();
+
+      console.log('SFDT Data received!', result);
+      text = result
+    } else {
+      text = await response.text();
+      console.log(text);
+    }
+
+    if (editorRef.current && editorRef.current.documentEditor) {
+      editorRef.current.documentEditor.open(text);
+    } else {
+      console.warn("editorRef or documentEditor is not ready yet.");
+    }
+  };
+
   useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const templateUrl = queryParams.get('templateUrl');
+    if(templateUrl){
+      fetchData(templateUrl)
+    }
     const userInfo = getUserInfo()
     setRoleId(userInfo?.RoleId)
     onLoadUserList()
@@ -124,11 +148,6 @@ const WordEditor: React.FC = () => {
     }
 
     try {
-      // const blob: Blob = await editor.saveAsBlob("DOCX");
-      // console.log("📄 Blob file output:", blob);
-      // const filenameDocument = `${filename}.docx`;
-      // const file = new File([blob], filenameDocument, { type: blob.type });
-
       const sfdt = editor.serialize();
       console.log(sfdt);
       const sfdtBlob = new Blob([sfdt], { type: 'application/json' });
@@ -139,21 +158,25 @@ const WordEditor: React.FC = () => {
       console.log("Upload response:", resp);
 
       if (resp.IsSuccess) {
+        const userInfo = getUserInfo()
+        console.log("xxhhh", userInfo);
         const data = {
           FileName: filename,
           Url: resp.Result?.Url,
           FullUrl: resp.Result?.FullUrl,
-          // DoanhNghiepID === 1 là trường ĐH Quốc tế
-          Username: roleId === 1 ? userSelect : 1
+          Username: userSelect,
+          AuthorUsername: userInfo?.UserName
         };
+        console.log("cvcvcv", data);
 
         // Gọi api insert vào db
         const isInsert = await apiUtil.auth.queryAsync('FileData_Insert', data);
 
         if (isInsert.IsSuccess) {
           setIsLoading(false)
-
+          message.success('Tạo file thành công!');
           console.log("File inserted successfully");
+          setShowDialog(false);
         } else {
           setIsLoading(false)
           console.error("Failed to insert file data");
@@ -206,7 +229,7 @@ const WordEditor: React.FC = () => {
             />
           </div>
           {/* roleID === 1, tức la admin, sẽ có quyền chọn đối tác */}
-          {roleId === 1 ? (
+          {roleId === 1 || roleId === 3 || roleId === 4 || roleId === 2 ? (
             <>
               <label className="block text-sm font-medium text-gray-700">Account name:</label>
               <Select

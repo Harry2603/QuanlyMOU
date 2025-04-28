@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Space, Table, Button, Input, Typography, Tag, Modal } from 'antd';
 
-import { DownloadOutlined, EditOutlined } from '@ant-design/icons';
+import { EditOutlined, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiUtil } from '../../utils';
 import EditDetail from './EditDetail';
@@ -15,17 +15,18 @@ import {
 DocumentEditorComponent.Inject(WordExport, SfdtExport)
 
 const App: React.FC = () => {
-    const [dataSource, setDataSource] = useState<any[]>([]);
+    const [dataSource, setDataSource] = useState<FileDataType[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editUrl, setEditUrl] = useState<string | null>(null); // Thêm dòng này
     const [selectedFileId, setSelectedFileId] = useState<number>()
     const hiddenEditorRef = useRef<DocumentEditorComponent>(null)
     const { Search } = Input;
-    const [filteredData, setFilteredData] = useState<DataType[]>([]);
+    const [filteredData, setFilteredData] = useState<FileDataType[]>([]);
     const [fileDataSelect, setFileDataSelect] = useState<FileDataType | null>(null)
     const [username, setUsername] = useState<string>()
     const { Title } = Typography;
+    const [searchText, setSearchText] = useState<string>('');
 
     const getUserInfo = (): UserInfoType | null => {
         const userInfoString = localStorage.getItem('userInfo');
@@ -81,9 +82,18 @@ const App: React.FC = () => {
         try {
             const res = await apiUtil.auth.queryAsync('FileData_Select', {});
             if (res.IsSuccess) {
+                const currentUser = getUserInfo(); // Lấy thông tin user hiện tại
+                const myUsername = currentUser?.UserName; // lấy Username
+    
+                
+    
                 const result = (res.Result as any[]).map((item: any, index: number) => ({
                     ...item,
                     key: index,
+    
+                    // Add hai biến để enable nút
+                    canApproveA: item.Status_SignatureA === 0 && item.AuthorUsername === myUsername,
+                    canApproveB: item.Status_SignatureB === 0 && item.PartnerID === myUsername,
                 }));
                 setDataSource(result);
             }
@@ -91,6 +101,7 @@ const App: React.FC = () => {
             console.error("Error fetching file list:", err);
         }
     };
+    
 
     const A_approved = async (record: FileDataType) => {
         const data = {
@@ -99,7 +110,7 @@ const App: React.FC = () => {
         }
 
         await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
-            Modal.success({ content: 'A signed!' })
+            Modal.success({ content: 'A signed successful!' })
             fetchData()
 
         }).catch(error => {
@@ -115,7 +126,7 @@ const App: React.FC = () => {
         }
 
         await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
-            Modal.success({ content: 'B signed!' })
+            Modal.success({ content: 'B signed successful!' })
             fetchData()
 
         }).catch(error => {
@@ -131,18 +142,23 @@ const App: React.FC = () => {
     }, []);
 
     // Hàm Search
+
     const onSearch = (value: string) => {
+        setSearchText(value);
         const keyword = value.toLowerCase();
-        const result = filteredData.filter(item =>
-            item.FileName.toLowerCase().includes(keyword) ||
-            item.TenDN.toLowerCase().includes(keyword)
+        const result = dataSource.filter(item =>
+            // item.FileName.toLowerCase().includes(keyword) ||
+            // item.NguoiTao.toLowerCase().includes(keyword)
+            (item.FileName?.toLowerCase() ?? '').includes(keyword) ||
+            (item.NguoiTao?.toLowerCase() ?? '').includes(keyword)
         );
+        console.log("object", result);
         setFilteredData(result);
     };
 
     const columns: ColumnsType<any> = [
         {
-            title: 'MOU_ID',
+            title: 'MOU_Number',
             key: 'index',
             width: '15%',
             ellipsis: true,
@@ -156,19 +172,7 @@ const App: React.FC = () => {
             ellipsis: true,
             render: (text: string) => <a>{text}</a>,
         },
-        // {
-        //     title: 'Status',
-        //     dataIndex: 'Status',
-        //     key: 'Status',
-        //     width: '20%',
-        //     ellipsis: true,
-        //     render: (_: any, record: any) => (
-        //         <div>
-        //             {record.Status_Side === 0 ? <Tag color="yellow">Writting</Tag> : record.Status_Side === 1 ? <Tag color="yellow">One side finish</Tag> : record.Status_BothSide === 1 ? <Tag color="green">Waiting to approve</Tag> : record.Status_SignatureA === 1 ? <Tag color="green">University International Approved</Tag> : record.Status_SignatureB === 1 ? <Tag color="green">Both Side Approved</Tag>}
-        //             <Tag></Tag>
-        //         </div>
-        //     ),
-        // },
+
         {
             title: 'Status',
             dataIndex: 'Status',
@@ -177,16 +181,18 @@ const App: React.FC = () => {
             ellipsis: true,
             render: (_: any, record: any) => {
                 if (!record.Status_Side) {
-                  return <Tag color="yellow">Writing</Tag>;
-                } else if (record.Status_Side && !record.Status_BothSide) {
-                  return <Tag color="yellow">One side finished</Tag>;
-                } else if (record.Status_BothSide && (record.Status_SignatureA || record.Status_SignatureB) && !(record.Status_SignatureA && record.Status_SignatureB)) {
-                  return <Tag color="green">On side Approved</Tag>;
-                } else if (record.Status_SignatureA && record.Status_SignatureB) {
-                  return <Tag color="green">Both Sides Approved</Tag>;
-                } else {
-                  return <Tag color="default">Unknown</Tag>;
-                }
+                    return <Tag color="yellow">Writing</Tag>;
+                  } else if (record.Status_Side && !record.Status_BothSide) {
+                    return <Tag color="yellow">One side finished</Tag>;
+                  } else if (record.Status_BothSide && !(record.Status_SignatureA || record.Status_SignatureB)) {
+                    return <Tag color="blue">Both side finished</Tag>;
+                  } else if (record.Status_BothSide && (record.Status_SignatureA || record.Status_SignatureB) && !(record.Status_SignatureA && record.Status_SignatureB)) {
+                    return <Tag color="green">One side Approved</Tag>;
+                  } else if (record.Status_SignatureA && record.Status_SignatureB) {
+                    return <Tag color="green">Both sides Approved</Tag>;
+                  } else {
+                    return <Tag color="default">Unknown</Tag>;
+                  }
               }              
         },
         {
@@ -195,20 +201,35 @@ const App: React.FC = () => {
             key: 'NguoiTao',
             width: '20%',
             ellipsis: true,
-            render: (text: string, record: FileDataType) => (
+            render: (text: string, record: FileDataType) => {
+                console.log("object",record,username,record.Status_BothSide,record.Status_SignatureA,username !== record.UsernameAuthor);
+                return(
                 <div>
-                    <p>{text}</p>
-                    <Button
-                        disabled={ record.Status_SignatureA || username !== record.UsernameAuthor}
-                        type="primary"
-                        size="middle" // hoặc "small" / "large"
-                        onClick={() => A_approved(record)}
-                        className="px-4 py-2 bg-green-600 text-white rounded"
-                    >
-                        Approve
-                    </Button>
-                </div>
-            ),
+                <p>{text}</p>
+                <Button
+                    disabled={!record.Status_BothSide || (record.Status_SignatureA || username !== record.UsernameAuthor)}
+                    type="primary"
+                    size="middle" 
+                    onClick={() => A_approved(record)}
+                    className="px-4 py-2 bg-green-600 text-white rounded"
+                >
+                    Approve
+                </Button>
+            </div>)
+            }
+                // <div>
+                //     <p>{text}</p>
+                //     <Button
+                //         disabled={!record.Status_BothSide || (record.Status_SignatureA || username !== record.UsernameAuthor)}
+                //         type="primary"
+                //         size="middle" 
+                //         onClick={() => A_approved(record)}
+                //         className="px-4 py-2 bg-green-600 text-white rounded"
+                //     >
+                //         Approve
+                //     </Button>
+                // </div>
+            
         },
         {
             title: 'Partner',
@@ -220,7 +241,7 @@ const App: React.FC = () => {
                 <div>
                     <p>{text}</p>
                     <Button
-                        disabled={record.Status_SignatureB || username !== record.UsernamePartner}
+                        disabled={!record.Status_BothSide ||(record.Status_SignatureB || username !== record.UsernamePartner)}
                         type="primary"
                         size="middle" // hoặc "small" / "large"
                         onClick={() => B_approved(record)}
@@ -237,17 +258,15 @@ const App: React.FC = () => {
             width: '20%',
             render: (_: any, record: any) => (
                 <Space size="middle">
-                    <Button
+                    {/* <Button
                         icon={<EditOutlined />}
-                        onClick={() => handleEdit(record)}></Button>
-                    <Button
-                        type="primary"
-                        icon={<DownloadOutlined />}
-                        size="middle" // hoặc "small" / "large"
+                        onClick={() => handleEdit(record)}></Button> */}
+                        <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
+                    <VerticalAlignBottomOutlined
+                        style={{ color: 'red' }}
                         onClick={() => loadAndDownload('Docx', record.FullUrl)}
-                        className="px-4 py-2 bg-green-600 text-white rounded"
-                    >
-                    </Button>
+                        className="px-4 py-2 bg-green-600 text-white rounded">
+                    </VerticalAlignBottomOutlined>
                 </Space>
             ),
         },
@@ -267,7 +286,9 @@ const App: React.FC = () => {
                         style={{ width: 300 }}
                     />
                 </div>
-                <Table columns={columns} dataSource={dataSource} loading={loading} />
+                {/* <Table columns={columns} dataSource={dataSource} loading={loading} /> */}
+                <Table columns={columns} dataSource={filteredData.length > 0 || searchText ? filteredData : dataSource} loading={loading} />
+
                 <EditDetail
                     isModalOpen={isModalOpen}
                     Url={editUrl}

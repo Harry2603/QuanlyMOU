@@ -26,7 +26,13 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             return null;
         }
     }
-    
+
+
+    // Giải mã base64
+    const decodeBase64 = (base64String: string) => {
+        return atob(base64String);
+    }
+
 
     const handleCancel = () => {
         onClose();
@@ -145,7 +151,26 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             setTimeout(() => {
                 setIsFullyOpen(true)
                 setTimeout(async () => {
-                    fetchData()
+                    // fetchData()
+                    console.log("url xxxxxx", Url);
+                    const decodedSFDT = decodeBase64(Url ?? '')
+                    const response = await fetch(decodedSFDT);
+
+                    // Check if the fetch was successful
+                    if (!response.ok) {
+                        console.error("Failed to fetch the file");
+                        return;
+                    }
+
+                    // Convert the response to text
+                    const text = await response.text();
+                    // console.error("Text content:", text);
+
+                    if (editorRef.current && editorRef.current.documentEditor) {
+                        editorRef.current.documentEditor.open(text);
+                    } else {
+                        console.warn("editorRef or documentEditor is not ready yet.");
+                    }
                 }, 0);
             }, 500)
 

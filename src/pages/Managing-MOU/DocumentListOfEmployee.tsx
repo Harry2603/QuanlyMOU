@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Space, Table, Button, Input, Typography, Tag, Modal } from 'antd';
+import { Space, Table, Button, Input, Typography, Tag } from 'antd';
 
-import { DownloadOutlined, EditOutlined } from '@ant-design/icons';
+import { DownloadOutlined, EditOutlined, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiUtil } from '../../utils';
 import {
@@ -10,7 +10,7 @@ import {
     // PdfExport,
     SfdtExport
 } from '@syncfusion/ej2-react-documenteditor';
-import EditDetailOfEmployee from './EditDetailOfEmployee';
+import EditDetail from './EditDetail';
 
 DocumentEditorComponent.Inject(WordExport, SfdtExport)
 
@@ -22,7 +22,7 @@ const DocumentListOfEmployee: React.FC = () => {
     const [selectedFileId, setSelectedFileId] = useState<number>()
     const hiddenEditorRef = useRef<DocumentEditorComponent>(null)
     const { Search } = Input;
-    const [filteredData, setFilteredData] = useState<DataType[]>([]);
+    const [filteredData, setFilteredData] = useState<FileDataType[]>([]);
     const [fileDataSelect, setFileDataSelect] = useState<FileDataType | null>(null)
     const { Title } = Typography;
 
@@ -78,37 +78,6 @@ const DocumentListOfEmployee: React.FC = () => {
         }
     };
 
-    // const A_approved = async (record: FileDataType) => {
-    //     const data = {
-    //         FileID: record.FileID,
-    //         FileStatus: 3
-    //     }
-
-    //     await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
-    //         Modal.success({ content: 'A signed!' })
-    //         fetchData()
-
-    //     }).catch(error => {
-    //         console.log("Fail to update file status", error);
-    //         Modal.error({ content: 'Fail to sign!' })
-    //     })
-    // }
-
-    // const B_approved = async (record: FileDataType) => {
-    //     const data = {
-    //         FileID: record.FileID,
-    //         FileStatus: 4
-    //     }
-
-    //     await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
-    //         Modal.success({ content: 'B signed!' })
-    //         fetchData()
-
-    //     }).catch(error => {
-    //         console.log("Fail to update file status", error);
-    //         Modal.error({ content: 'Fail to sign!' })
-    //     })
-    // }
 
     useEffect(() => {
         fetchData();
@@ -116,17 +85,24 @@ const DocumentListOfEmployee: React.FC = () => {
 
     // Hàm Search
     const onSearch = (value: string) => {
-        const keyword = value.toLowerCase();
-        const result = filteredData.filter(item =>
-            item.FileName.toLowerCase().includes(keyword) ||
-            item.TenDN.toLowerCase().includes(keyword)
+        const keyword = value.toLowerCase().trim();
+        if (!keyword) {
+            setFilteredData([]);
+            return;
+        }
+        const result = dataSource.filter(item =>
+            (item.FileName ?? "").toLowerCase().includes(keyword) ||
+            (item.NguoiTao ?? "").toLowerCase().includes(keyword) ||
+            (item.TenPartner ?? "").toLowerCase().includes(keyword)
+            
         );
         setFilteredData(result);
     };
 
+
     const columns: ColumnsType<any> = [
         {
-            title: 'MOU_ID',
+            title: 'MOU_Number',
             key: 'index',
             width: '15%',
             ellipsis: true,
@@ -140,19 +116,6 @@ const DocumentListOfEmployee: React.FC = () => {
             ellipsis: true,
             render: (text: string) => <a>{text}</a>,
         },
-        // {
-        //     title: 'Status',
-        //     dataIndex: 'Status',
-        //     key: 'Status',
-        //     width: '20%',
-        //     ellipsis: true,
-        //     render: (_: any, record: any) => (
-        //         <div>
-        //             {record.Status_Side === 0 ? <Tag color="yellow">Writting</Tag> : record.Status_Side === 1 ? <Tag color="yellow">One side finish</Tag> : record.Status_BothSide === 1 ? <Tag color="green">Waiting to approve</Tag> : record.Status_SignatureA === 1 ? <Tag color="green">University International Approved</Tag> : record.Status_SignatureB === 1 ? <Tag color="green">Both Side Approved</Tag>}
-        //             <Tag></Tag>
-        //         </div>
-        //     ),
-        // },
         {
             title: 'Status',
             dataIndex: 'Status',
@@ -197,17 +160,12 @@ const DocumentListOfEmployee: React.FC = () => {
             width: '20%',
             render: (_: any, record: any) => (
                 <Space size="middle">
-                    <Button
-                        icon={<EditOutlined />}
-                        onClick={() => handleEdit(record)}></Button>
-                    <Button
-                        type="primary"
-                        icon={<DownloadOutlined />}
-                        size="middle" // hoặc "small" / "large"
+                    <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
+                    <VerticalAlignBottomOutlined
+                        style={{ color: 'red' }}
                         onClick={() => loadAndDownload('Docx', record.FullUrl)}
-                        className="px-4 py-2 bg-green-600 text-white rounded"
-                    >
-                    </Button>
+                        className="px-4 py-2 bg-green-600 text-white rounded">
+                    </VerticalAlignBottomOutlined>
                 </Space>
             ),
         },
@@ -216,7 +174,7 @@ const DocumentListOfEmployee: React.FC = () => {
     return (
         <>
             <div>
-                <Title level={3}>List of Template MOU</Title>
+                <Title level={3}>List of MOU for Employee</Title>
                 <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
                     <Search
                         placeholder="Search description"
@@ -227,8 +185,10 @@ const DocumentListOfEmployee: React.FC = () => {
                         style={{ width: 300 }}
                     />
                 </div>
-                <Table columns={columns} dataSource={dataSource} loading={loading} />
-                <EditDetailOfEmployee
+                <Table columns={columns} dataSource={filteredData.length > 0 ? filteredData : dataSource} loading={loading} />
+
+                <EditDetail
+                    isHideEnd={false}
                     isModalOpen={isModalOpen}
                     Url={editUrl}
                     fileID={selectedFileId}

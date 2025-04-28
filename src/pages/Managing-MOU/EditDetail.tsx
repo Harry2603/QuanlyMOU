@@ -9,7 +9,7 @@ import { Modal, Button, Space } from 'antd';
 import { apiUtil } from '../../utils';
 
 
-const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, fileID, onFetch, fileDataSelect }) => {
+const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, fileID, onFetch, fileDataSelect, isHideEnd, isCreate }) => {
     const editorRef = useRef<DocumentEditorContainerComponent>(null)
     const [isFullyOpen, setIsFullyOpen] = useState(false)
     const [username, setUsername] = useState<string>()
@@ -26,7 +26,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             return null;
         }
     }
-    
+
 
     const handleCancel = () => {
         onClose();
@@ -95,30 +95,109 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
         }
     };
 
+    const handleCreate = async () => {
+        const sfdt = editorRef.current?.documentEditor.serialize();
+        console.log("Document content:", sfdt);
+
+        if (!sfdt) return;
+
+        try {
+            let filename = prompt("Please enter your filename") ?? "default";
+            const blob = new Blob([sfdt], { type: 'application/json' });
+            // Kiểm tra nếu chưa có phần mở rộng .txt thì mới thêm vào
+            if (!filename.endsWith(".txt")) {
+                filename += ".txt";
+            }
+            const file = new File([blob], filename, { type: blob.type });
+            const uploadResp = await apiUtil.auth.uploadFileAsync(file);
+            if (uploadResp.IsSuccess) {
+                const userInfo = getUserInfo()
+                console.log("xxhhh", userInfo);
+                const data = {
+                    FileName: filename,
+                    Url: uploadResp.Result?.Url,
+                    FullUrl: uploadResp.Result?.FullUrl,
+                    Username: "INTERNATIONAL UNIVERSITY",//TODO tên đối tác
+                    AuthorUsername: userInfo?.UserName
+                };
+                console.log("cvcvcv", data);
+
+                // Gọi api insert vào db
+                const isInsert = await apiUtil.auth.queryAsync('FileData_Insert', data);
+
+                if (isInsert.IsSuccess) {
+                    Modal.success({ content: 'Template đã được lưu thành công!' });
+                    onFetch()
+                    onClose(); // đóng modal sau khi lưu
+                } else {
+                    Modal.error({ content: 'Lỗi khi lưu dữ liệu vào database.' });
+                }
+            } else {
+                Modal.error({ content: 'Upload file thất bại.' });
+            }
+        } catch (err) {
+            console.error("Error during save:", err);
+            Modal.error({ content: 'Đã xảy ra lỗi khi lưu.' });
+        }
+    };
+
     const fetchData = async () => {
         if (!Url) {
-            Modal.error({ content: 'URL không hợp lệ.' });
-            return
+            Modal.error({ content: "URL không hợp lệ." });
+            return;
         }
 
         const response = await fetch(Url);
 
-        // Check if the fetch was successful
         if (!response.ok) {
             console.error("Failed to fetch the file");
             return;
         }
 
-        // Convert the response to text
-        const text = await response.text();
-        // console.error("Text content:", text);
+        let text: any;
+
+        const isDocxUrl = (url: string): boolean => {
+            try {
+                const parsedUrl = new URL(url);
+                const pathname = parsedUrl.pathname.toLowerCase();
+                return pathname.endsWith(".docx") || pathname.endsWith(".doc");
+            } catch (error) {
+                console.error("Invalid URL:", error);
+                return false;
+            }
+        };
+
+        if (isDocxUrl(Url)) {
+            const docxBlob = await response.blob();
+
+            console.log('Uploading DOCX to Syncfusion server...');
+
+            const formData = new FormData();
+            formData.append('UploadFiles', new File([docxBlob], 'uploaded.docx', {
+                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            }));
+
+            const uploadResponse = await fetch('https://ej2services.syncfusion.com/production/web-services/api/documenteditor/Import', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!uploadResponse.ok) throw new Error(`Failed to convert DOCX: ${uploadResponse.statusText}`);
+            const result = await uploadResponse.text();
+
+            console.log('SFDT Data received!', result);
+            text = result
+        } else {
+            text = await response.text();
+            console.log(text);
+        }
 
         if (editorRef.current && editorRef.current.documentEditor) {
             editorRef.current.documentEditor.open(text);
         } else {
             console.warn("editorRef or documentEditor is not ready yet.");
         }
-    }
+    };
 
     const handleEnd = async () => {
         console.log("file xxx", fileDataSelect);
@@ -200,12 +279,16 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                     </DocumentEditorContainerComponent>
                 </div>
             ) : null}
+
             <div style={{ marginTop: '10px', textAlign: 'right' }}>
-                <Space>
-                    <Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button>
-                    <Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleSave}>Save</Button>
+                <Space>{
+                    isHideEnd === false ? null : (<Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button>)
+                }
+                    {isCreate === true ? (<Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleCreate}>Create</Button>) :
+                                        (<Button disabled={fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleSave}>Save</Button>)}
                 </Space>
             </div>
+
         </Modal>
 
 

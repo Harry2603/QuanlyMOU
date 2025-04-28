@@ -1,8 +1,8 @@
-interface DataType {
-    FileID: number
-    FileName: string
-    TenDN: string
-}
+// interface DataType {
+//     FileID: number
+//     FileName: string
+//     TenDN: string
+// }
 
 interface FileDataType {
     FileID: number,
@@ -10,6 +10,7 @@ interface FileDataType {
     FullUrl: string,
     Url: string,
     TenPartner: string,
+    CreateUser:string,
     NguoiTao: string,
     NguoiCapNhat: string,
     Status_BothSide: boolean,
@@ -29,10 +30,12 @@ interface UserInfoType {
 }
 
 interface EditDetailProps {
+    isHideEnd?: boolean;
+    isCreate?: boolean;
     isModalOpen: boolean;
     Url: string | null;
     fileID: number | undefined
-    fileDataSelect: FileDataType | null
+    fileDataSelect: FileDataType | null | any
     onClose: () => void;
     onFetch: () => void
 }
@@ -48,4 +51,26 @@ interface FileDetail {
 interface UserListType {
     TenDangNhap: string
 
+}
+
+interface UploadResult {
+    IsSuccess: boolean
+    Message: string
+    Result: {
+        FileName: string;
+        FullUrl: string;
+        Url: string;
+    } | null;
+}
+interface DNDataType {
+    DoanhNghiepID: number;
+    MaDN: string;
+    TenDN: string;
+    DiaChi: string;
+    SDT: number;
+    Email: string;
+    NguoiDaiDien: string;
+    Website: string;
+    NgayThanhLap: string;
+    GhiChu: string
 }

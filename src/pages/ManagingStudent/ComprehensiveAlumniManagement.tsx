@@ -2,15 +2,7 @@ import React, { useState } from 'react'
 import StandardUploadFile from '../../components/StandardUploadFile'
 import { Button, Form } from 'antd'
 
-interface UploadResult {
-    IsSuccess: boolean
-    Message: string
-    Result: {
-        FileName: string;
-        FullUrl: string;
-        Url: string;
-    } | null;
-}
+
 
 const ComprehensiveAlumniManagement: React.FC = () => {
     const [fileNames, setFileNames] = useState<{ [key: string]: string | null }>({
