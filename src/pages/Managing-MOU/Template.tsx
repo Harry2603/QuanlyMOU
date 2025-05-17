@@ -1,4 +1,4 @@
-import { TableColumnsType, Button, Flex, Table, Typography, Input, Form, message, Modal } from 'antd';
+import { TableColumnsType, Button, Flex, Table, Typography, Input, Form, message, Modal, Select } from 'antd';
 import StandardUploadFile from '../../components/StandardUploadFile';
 import { apiUtil } from '../../utils';
 import React, { useState, useEffect } from 'react';
@@ -10,6 +10,8 @@ interface DataType {
     Description: string
     FullUrl: string
     Url: string
+    CategoryId: number // thêm dòng này
+    CategoryName?: string; // chỉ dùng để hiển thị
 }
 interface UploadResult {
     IsSuccess: boolean
@@ -32,9 +34,17 @@ const Template: React.FC = () => {
     const [editUrl, setEditUrl] = useState<string | null>(null); // Thêm dòng này
     const [selectedFileId, setSelectedFileId] = useState<number>()
     const [isLoading, setIsLoading] = useState(false);
+    const [CategoryList, setCategoryList] = useState<CategoryType[]>([]);
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [pendingUploadData, setPendingUploadData] = useState<UploadResult | null>(null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [userInfo, setUserInfo] = useState<UserInfoType | null>(null);
+
+
     const { Search } = Input;
     const { Title } = Typography;
     const [form] = Form.useForm();
+    const { Option } = Select;
 
     const [description, setDescription] = useState<{ [key: string]: string | null }>({
         defaultUrl: null,
@@ -43,8 +53,26 @@ const Template: React.FC = () => {
     })
 
 
+    useEffect(() => {
+        const getUserInfo = (): UserInfoType | null => {
+            const userInfoString = localStorage.getItem('userInfo');
+            try {
+                if (userInfoString) {
+                    return JSON.parse(userInfoString);
+                }
+                return null;
+            } catch (error) {
+                console.error('Error parsing userInfo from localStorage:', error);
+                return null;
+            }
+        };
+
+        setUserInfo(getUserInfo());
+    }, []);
+
     // Xóa một Template
     const handleDelete = (record: DataType) => {
+        console.log("recỏdxxxxx", record);
         if (record.TemplateID) {
             Modal.confirm({
                 title: "Are you sure you want to delete this MOU?",
@@ -65,10 +93,11 @@ const Template: React.FC = () => {
     const onDeleteTemplate = (TemplateID: number) => {
         setIsLoading(true);
 
-        apiUtil.auth.queryAsync<{ IsSuccess: boolean }>('Template_Delete', { TemplateID }).then(resp => {
+        apiUtil.auth.queryAsync('Template_Delete', { TemplateID }).then(resp => {
             if (resp.IsSuccess) {
                 // Xóa thành công, cập nhật danh sách
-                setTemplateList(prevList => prevList.filter(item => item.TemplateID !== TemplateID));
+                // setTemplateList(prevList => prevList.filter(item => item.TemplateID !== TemplateID));
+                onLoadTemplateList()
                 setIsLoading(false);
                 console.log(`Doanh Nghiep với ID ${TemplateID} đã bị xóa`);
             } else {
@@ -81,7 +110,7 @@ const Template: React.FC = () => {
     };
 
     const handleEdit = (record: DataType) => {
-        window.open('/Managing-MOU/wordeditor?templateUrl='+ record.FullUrl);
+        window.open('/Managing-MOU/wordeditor?templateUrl=' + record.FullUrl);
         // setEditUrl(record.FullUrl);
         // setSelectedFileId(record.TemplateID);
         // setFileDataSelect(record)
@@ -106,14 +135,14 @@ const Template: React.FC = () => {
     const onLoadTemplateList = () => {
 
         setIsLoading(true)
-        apiUtil.auth.queryAsync<DataType[]>('Template_Select').then(resp => {
+        apiUtil.any.queryAsync<DataType[]>('Template_Select').then(resp => {
             if (resp.IsSuccess) {
                 console.log("API Response:", resp);
                 if (resp.Result === null) return
                 setTemplateList(resp.Result.map((item, index) => {
                     return {
                         ...item,
-                        TemplateID: index + 1, // Giả sử bạn tạo TemplateID nếu không có sẵn
+                        key: index + 1
                     }
                 }))// Cập nhật danh sách CSV vào state
 
@@ -125,56 +154,129 @@ const Template: React.FC = () => {
         })
     }
 
+    const onLoadCategory = () => {
+        setIsLoading(true);
+        apiUtil.any.queryAsync<CategoryType[]>('Category_Select')
+            .then(resp => {
+                if (resp.IsSuccess && resp.Result) {
+                    setCategoryList(resp.Result);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading Category:', error);
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    };
+
     useEffect(() => {
         console.log("🔍 Templatelist updated:", Templatelist);
         setIsLoading(true);
         Promise.all([
-            onLoadTemplateList(),
+            onLoadTemplateList(), onLoadCategory()
         ]).then(() => setIsLoading(false));
     }, []);
+
+    // const handleFileUpload = async (keyUrl: string, keyName: string, keyFullUrl: string, resp: UploadResult) => {
+    //     if (!resp.IsSuccess || !resp.Result) {
+    //         message.error("Upload thất bại, không thể insert.");
+    //         return;
+    //     }
+    //     form.setFieldsValue({
+    //         [keyUrl]: resp.Result?.Url,
+    //         [keyName]: resp.Result?.FileName || null,
+    //         [keyFullUrl]: resp.Result?.FullUrl || null,
+    //     })
+    //     setDescription(prev => ({
+    //         ...prev,
+    //         [keyName]: resp.Result?.FileName || null,
+    //     }));
+
+    //     // Sau khi upload thành công và gán form xong => gọi insert luôn
+    //     if (resp.IsSuccess) {
+    //         try {
+    //             const newTemplate: DataType = {
+    //                 Description: resp.Result?.FileName,
+    //                 FullUrl: resp.Result?.FullUrl,
+    //                 Url: resp.Result?.Url,
+    //             };
+
+    //             console.log("newTemplate xxxxx", newTemplate);
+
+    //             const response = await apiUtil.auth.queryAsync('Template_Insert', newTemplate);
+
+    //             if (response.IsSuccess) {
+    //                 message.success("Upload và thêm template thành công");
+    //                 setTemplateList(prev => [...prev, newTemplate]);
+    //                 await onLoadTemplateList();
+    //             } else {
+    //                 message.error(response.Message || "Insert thất bại");
+    //             }
+    //         } catch (err) {
+    //             console.error("Lỗi khi upload và insert:", err);
+    //         }
+    //     } else {
+    //         console.log("Upload file that bai");
+    //     }
+    // }
 
     const handleFileUpload = async (keyUrl: string, keyName: string, keyFullUrl: string, resp: UploadResult) => {
         if (!resp.IsSuccess || !resp.Result) {
             message.error("Upload thất bại, không thể insert.");
             return;
         }
+
         form.setFieldsValue({
             [keyUrl]: resp.Result?.Url,
             [keyName]: resp.Result?.FileName || null,
             [keyFullUrl]: resp.Result?.FullUrl || null,
-        })
+        });
+
         setDescription(prev => ({
             ...prev,
             [keyName]: resp.Result?.FileName || null,
         }));
-        // Sau khi upload thành công và gán form xong => gọi insert luôn
-        if (resp.IsSuccess) {
-            try {
-                const newTemplate: DataType = {
-                    // TemplateID:resp.Result?.TemplateID,
-                    Description: resp.Result?.FileName,
-                    FullUrl: resp.Result?.FullUrl,
-                    Url: resp.Result?.Url
-                };
 
-                console.log("newTemplate xxxxx", newTemplate);
+        // ✅ Lưu file tạm và mở modal chọn category
+        setPendingUploadData(resp);
+        setIsCategoryModalOpen(true);
+        onLoadCategory(); // gọi API để load category
+    };
 
-                const response = await apiUtil.auth.queryAsync('Template_Insert', newTemplate);
-
-                if (response.IsSuccess) {
-                    message.success("Upload và thêm template thành công");
-                    setTemplateList(prev => [...prev, newTemplate]);
-                    await onLoadTemplateList();
-                } else {
-                    message.error(response.Message || "Insert thất bại");
-                }
-            } catch (err) {
-                console.error("Lỗi khi upload và insert:", err);
-            }
-        } else {
-            console.log("Upload file that bai");
+    const handleConfirmCategory = async () => {
+        if (!pendingUploadData?.Result || selectedCategoryId === null) {
+            message.warning("Vui lòng chọn loại Category");
+            return;
         }
-    }
+
+        const newTemplate: DataType = {
+            Description: pendingUploadData.Result.FileName,
+            FullUrl: pendingUploadData.Result.FullUrl,
+            Url: pendingUploadData.Result.Url,
+            CategoryId: selectedCategoryId, // 🔥 Thêm dòng này
+        };
+
+        try {
+            const response = await apiUtil.auth.queryAsync('Template_Insert', newTemplate);
+            if (response.IsSuccess) {
+                message.success("Thêm template thành công");
+                setTemplateList(prev => [...prev, newTemplate]);
+                await onLoadTemplateList();
+            } else {
+                message.error(response.Message || "Insert thất bại");
+            }
+        } catch (err) {
+            console.error("Lỗi khi insert:", err);
+        }
+
+        // Đóng modal
+        setIsCategoryModalOpen(false);
+        setPendingUploadData(null);
+        onLoadCategory(); // gọi API để load category
+    };
+
+
 
     // Hàm Search
     const onSearch = (value: string) => {
@@ -191,24 +293,60 @@ const Template: React.FC = () => {
         {
             title: 'Count',
             key: 'index',
-            width: '15%',
-            ellipsis: true,
-            render: (_text, _record, index) => index + 1
+            width: '8%',
+            align: 'center',
+            render: (_text, _record, index) => index + 1,
         },
-        { title: 'Description', dataIndex: 'Description', key: 'Description' },
+        {
+            title: 'Description',
+            dataIndex: 'Description',
+            key: 'Description',
+            width: '40%',
+            ellipsis: true,
+        },
+        {
+            title: 'Category',
+            dataIndex: 'CategoryName',
+            key: 'CategoryName',
+            width: '25%',
+            filters: Array.from(
+                new Set(Templatelist.map(cat => cat.CategoryName).filter(Boolean)) // lọc bỏ undefined
+            ).map(name => ({
+                text: name as string,
+                value: name as string,
+            })),
+            onFilter: (value, record) => record.CategoryName === value,
+            render: (text: string) => text || 'Unknown',
+            ellipsis: true,
+        },
+        
+        
         {
             title: 'Action',
             key: 'action',
             render: (_: any, record: any) => (
                 <Flex gap="small" wrap>
-                    {/* <Button
-                        icon={<EditOutlined />}
-                        onClick={() => handleEdit(record)}></Button> */}
-                    <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
-                    <DeleteOutlined style={{ color: 'red' }} onClick={() => handleDelete(record)} />
+                    <EditOutlined
+                        style={{ color: 'blue', cursor: 'pointer' }}
+                        onClick={() => {
+                            if (!userInfo) {
+                                message.info('Hãy đăng nhập để xem nội dung');
+                                return;
+                            }
+                            handleEdit(record);
+                        }}
+                    />
+
+                    {userInfo?.RoleId === 1 && (
+                        <DeleteOutlined
+                            style={{ color: 'red', cursor: 'pointer' }}
+                            onClick={() => handleDelete(record)}
+                        />
+                    )}
                 </Flex>
             ),
-        },
+        }
+
     ];
     return (
         <div>
@@ -223,24 +361,50 @@ const Template: React.FC = () => {
                     style={{ width: 300 }}
                 />
 
-                <StandardUploadFile
-                    onStart={() => {
-                        console.log('onStart')
+                <Modal
+                    title="Chọn Category cho Template"
+                    open={isCategoryModalOpen}
+                    onOk={handleConfirmCategory}
+                    onCancel={() => {
+                        setIsCategoryModalOpen(false);
+                        setPendingUploadData(null);
+                        onLoadCategory();
                     }}
-                    onCompleted={resp => {
-                        handleFileUpload(
-                            'defaultUrl',
-                            'defaultName',
-                            'defaultFullUrl',
-                            resp,
-                        )
-                        console.log('resp', resp)
-                    }}>
-                    <Button
-                        type="primary"
-                        size="large"
-                    >Upload</Button>
-                </StandardUploadFile>
+                >
+                    <Form layout="vertical">
+                        <Form.Item label="Category">
+                            <Select
+                                placeholder="Select Category"
+                                value={selectedCategoryId ?? undefined}
+                                onChange={(value) => setSelectedCategoryId(value)}
+                                style={{ width: '100%' }}
+                            >
+                                {CategoryList.map(cat => (
+                                    <Select.Option key={cat.Id} value={cat.Id}>
+                                        {cat.Name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                {userInfo?.RoleId === 1 && (
+                    <StandardUploadFile
+                        onStart={() => {
+                            console.log('onStart');
+                        }}
+                        onCompleted={(resp) => {
+                            handleFileUpload('defaultUrl', 'defaultName', 'defaultFullUrl', resp);
+                        }}
+                    >
+                        <Button type="primary" size="large">
+                            Upload
+                        </Button>
+                    </StandardUploadFile>
+                )}
+
+
             </div>
             <Table<DataType>
                 columns={columns}

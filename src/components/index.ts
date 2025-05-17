@@ -3,5 +3,6 @@ import InputGroup from './InputGroup'
 import RowAction from './RowAction'
 import StandardModal from './StandardModal'
 import StandardForm from './StandardForm'
+import PublicAppLayout from './app-layout/PublicAppLayout'
 
-export { AppLayout, InputGroup, RowAction, StandardModal, StandardForm }
+export { AppLayout, PublicAppLayout, InputGroup, RowAction, StandardModal, StandardForm }

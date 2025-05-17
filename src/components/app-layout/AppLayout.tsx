@@ -149,15 +149,19 @@ const AppLayout = (): React.JSX.Element => {
 
         getItem('ManagingMOU', 'managing-mou', <MenuUnfoldOutlined />, [
             ...(roleId === 1 || roleId === 3 || roleId === 4
-                ? [getItem(<Link to="/Managing-MOU/documentlist">DocumnetList</Link>, 'documentlist', <FolderOutlined/>)]
+                ? [getItem(<Link to="/Managing-MOU/documentlist">DocumnetList</Link>, 'documentlist', <FolderOutlined />)]
                 : []),
 
             ...(roleId === 1 || roleId === 2
-                ? [getItem(<Link to="/Managing-MOU/documentlistofemployee">Document List Of Employee</Link>, 'documentlistofemployee',<FileWordOutlined />)]
+                ? [getItem(<Link to="/Managing-MOU/documentlistofemployee">Document List Of Employee</Link>, 'documentlistofemployee', <FileWordOutlined />)]
                 : []),
 
-            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
-                ? [getItem(<Link to="/Managing-MOU/template">Template</Link>, 'template', <FolderOpenOutlined/>)]
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4 || roleId === null
+                ? [getItem(<Link to="/Managing-MOU/template">Template</Link>, 'template', <FolderOpenOutlined />)]
+                : []),
+
+            ...(roleId === 1
+                ? [getItem(<Link to="/Managing-MOU/category">Category</Link>, 'category')]
                 : []),
 
             ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
@@ -168,15 +172,15 @@ const AppLayout = (): React.JSX.Element => {
             ? [
                 getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
                     ...(roleId === 1 || roleId === 2 || roleId === 4
-                        ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany',<IdcardOutlined />)]
+                        ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany', <IdcardOutlined />)]
                         : []),
 
                     // ...(roleId === 1 || roleId === 2 || roleId === 4
                     //     ? [getItem(<Link to="/ManagingAccount/admin-account">List of Admin</Link>, 'admin-list')]
                     //     : []),
 
-                    ...(roleId === 1 || roleId === 2
-                        ? [getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list',<UserAddOutlined />)] : []),
+                    // ...(roleId === 1 || roleId === 2
+                    //     ? [getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list',<UserAddOutlined />)] : []),
                 ]),
             ]
             : []),

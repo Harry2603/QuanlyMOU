@@ -1,8 +1,9 @@
-// interface DataType {
-//     FileID: number
-//     FileName: string
-//     TenDN: string
-// }
+interface CategoryType {
+    Id: number
+    Name: string
+    Description: string
+   
+}
 
 interface FileDataType {
     FileID: number,

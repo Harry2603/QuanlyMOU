@@ -275,7 +275,7 @@ const App: React.FC = () => {
     return (
         <>
             <div>
-                <Title level={3}>List of MOU</Title>
+                <Title level={3}>List Of Document</Title>
                 <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
                     <Search
                         placeholder="Search description"

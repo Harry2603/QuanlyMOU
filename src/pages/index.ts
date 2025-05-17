@@ -12,6 +12,6 @@ import ComprehensiveAlumniManagement from './ManagingStudent/ComprehensiveAlumni
 import WordEditor from './Managing-MOU/WordEditor.tsx';
 import { registerLicense } from '@syncfusion/ej2-base';
 
-registerLicense('Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCe0x3QXxbf1x1ZFREal9VTnVXUj0eQnxTdEBjXX5acndWRmJaWUNyWklfag==');
+registerLicense('ORg4AjUWIQA/Gnt2XFhhQlJHfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTH5Wd0ViW3tZcXVXQ2NcWkZ/');
 
 export { DocumentList,Template,DocumentListOfEmployee,LoginPage, ListofAdmin,ListOfCompany,ListOfPostGraduateStudent,TheNumberOfGraduates,ComprehensiveAlumniManagement,WordEditor };
