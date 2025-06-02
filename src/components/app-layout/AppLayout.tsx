@@ -168,22 +168,16 @@ const AppLayout = (): React.JSX.Element => {
                 ? [getItem(<Link to="/Managing-MOU/wordeditor">WordEditor</Link>, 'word-editor')]
                 : []),
         ]),
-        ...(roleId !== 3
-            ? [
-                getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
-                    ...(roleId === 1 || roleId === 2 || roleId === 4
-                        ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany', <IdcardOutlined />)]
-                        : []),
+        getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
+            ...(roleId === 1 || roleId === 2 || roleId === 4
+                ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany', <IdcardOutlined />)]
+                : []),
 
-                    // ...(roleId === 1 || roleId === 2 || roleId === 4
-                    //     ? [getItem(<Link to="/ManagingAccount/admin-account">List of Admin</Link>, 'admin-list')]
-                    //     : []),
+            ...(roleId === 3
+                ? [getItem(<Link to="/ManagingAccount/Personal-account">Personal File</Link>, 'personalfile')]
+                : []),
+        ]),
 
-                    // ...(roleId === 1 || roleId === 2
-                    //     ? [getItem(<Link to="/ManagingAccount/register">Creat new user account</Link>, 'useraccount-list',<UserAddOutlined />)] : []),
-                ]),
-            ]
-            : []),
 
         // ...(roleId !== 3
         //     ? [

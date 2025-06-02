@@ -63,7 +63,7 @@
     -webkit-text-fill-color: transparent;
 }
 
-.register-form .form {
+/* .register-form .form {
     position: absolute;
     top: 45%;
     left: 50%;
@@ -72,6 +72,23 @@
     height: auto;
     padding: 36px;
     box-shadow: 0 0 100px rgba(0, 0, 0, 0.08);
+} */
+ .register-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f9f9f9;
+  padding: 40px;
+}
+
+.register-form .form {
+  background: #ffffff;
+  padding: 40px 48px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px; /* ⬅ CHO FORM RỘNG HƠN */
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
 }
 .register-form .form button {
     width: 100%;

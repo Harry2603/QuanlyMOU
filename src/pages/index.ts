@@ -4,7 +4,7 @@ import Template from './Managing-MOU/Template.tsx';
 // import DashboardMOU from './Dashboard/DashboardMOU.tsx';
 // import DashboardCSV from './Dashboard/DashboardCSV.tsx';
 import ListOfCompany from './ManagingAccount/ListOfCompany.tsx';
-import ListofAdmin from './ManagingAccount/ListofAdmin.tsx';
+import PersonalFile from './ManagingAccount/PersonalFile.tsx';
 import LoginPage from './login-page/LoginPage';
 import ListOfPostGraduateStudent from './ManagingStudent/ListOfPostGraduateStudent.tsx';
 import TheNumberOfGraduates from './ManagingStudent/TheNumberOfGraduates.tsx';
@@ -14,4 +14,4 @@ import { registerLicense } from '@syncfusion/ej2-base';
 
 registerLicense('ORg4AjUWIQA/Gnt2XFhhQlJHfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTH5Wd0ViW3tZcXVXQ2NcWkZ/');
 
-export { DocumentList,Template,DocumentListOfEmployee,LoginPage, ListofAdmin,ListOfCompany,ListOfPostGraduateStudent,TheNumberOfGraduates,ComprehensiveAlumniManagement,WordEditor };
+export { DocumentList,Template,DocumentListOfEmployee,LoginPage, PersonalFile,ListOfCompany,ListOfPostGraduateStudent,TheNumberOfGraduates,ComprehensiveAlumniManagement,WordEditor };
