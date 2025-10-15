@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@microsoft/signalr": "^9.0.6",
     "@react-oauth/google": "^0.12.1",
     "@syncfusion/ej2-base": "^29.1.36",
     "@syncfusion/ej2-documenteditor": "^29.1.38",
@@ -20,6 +21,7 @@
     "@syncfusion/ej2-react-filemanager": "^29.1.37",
     "@syncfusion/ej2-react-grids": "^29.1.38",
     "@syncfusion/ej2-react-popups": "^29.1.37",
+    "@syncfusion/ej2-react-spreadsheet": "^29.1.41",
     "antd": "^5.24.0",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
@@ -30,8 +32,9 @@
     "react-dom": "^19.0.0",
     "react-quill-new": "^3.4.1",
     "react-router-dom": "^7.1.5",
+    "socket.io-client": "^4.8.1",
     "uuid": "^11.0.5",
-    "xlsx": "^0.18.5",
+    "xlsx": "0.18.5",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

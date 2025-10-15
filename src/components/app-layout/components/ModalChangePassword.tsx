@@ -12,7 +12,7 @@ const ModalChangePassword: React.FC<PropType> = ({ isShow, setIsShow }) => {
     const [isBusy, setIsBusy] = useState(false)
 
     const onSave: FormProps<FieldType>['onFinish'] = formData => {
-        console.log(formData)
+        // console.log(formData)
         message.info('Under development')
         setIsBusy(true)
         setTimeout(() => {

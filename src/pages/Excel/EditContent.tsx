@@ -1,17 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
-import {
-    DocumentEditorContainerComponent,
-    Toolbar,
-    Inject,
-} from '@syncfusion/ej2-react-documenteditor';
-import './WordEditor.css';
+import { SpreadsheetComponent } from '@syncfusion/ej2-react-spreadsheet';
+import './spreadsheet.css';
 import { Modal, Button, Space } from 'antd';
 import { apiUtil } from '../../utils';
 import realtimeService from '../../services/realtimeService';
 
 
-const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, fileID, onFetch, fileDataSelect, isHideEnd, isCreate }) => {
-    const editorRef = useRef<DocumentEditorContainerComponent>(null)
+const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID, onFetch, fileDataSelect, isHideEnd, isCreate }) => {
+    const spreadsheetRef = useRef<SpreadsheetComponent>(null)
     const [isFullyOpen, setIsFullyOpen] = useState(false)
     const [username, setUsername] = useState<string>()
 
@@ -38,54 +34,61 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
     };
 
     const handleSave = async () => {
-        const sfdt = editorRef.current?.documentEditor.serialize();
-        // console.log("Document content:", sfdt);
+        const sfdt = await spreadsheetRef.current?.saveAsJson();
+        console.log("Spreadsheet content:", sfdt);
 
         if (!sfdt) return;
 
         try {
-            const isSelectDetail = await apiUtil.auth.queryAsync('FileData_Select_ById', { FileID: fileID })
+            console.log("Gọi API với FileId =", fileID);
+            const isSelectDetail = await apiUtil.auth.queryAsync('ExcelFile_Select_ById', { FileId: fileID })
 
             if (!isSelectDetail.IsSuccess) {
                 Modal.error({ content: 'Lỗi khi tải dữ liệu chi tiết.' })
                 return
             }
+            console.log("API Detail Result:", isSelectDetail);
+            console.log("API Result:", isSelectDetail.Result);
 
-            const detail: any = isSelectDetail.Result as FileDetail
+            const detail: any = isSelectDetail.Result as ExcelDetail
 
             if (detail.lenght < 0) {
                 Modal.error({ content: 'detail không có dữ liệu' })
                 return
             }
 
-            const blob = new Blob([sfdt], { type: 'application/json' });
-            let filename = detail[0].FileName;
-
-            // Kiểm tra nếu chưa có phần mở rộng .txt thì mới thêm vào
-            if (!filename.endsWith(".txt")) {
-                filename += ".txt";
+            const blob = new Blob([JSON.stringify(sfdt)], { type: 'application/json' });
+            // Kiểm tra kỹ dữ liệu trước khi truy cập
+            let filename = "default.xlsx"; // tên mặc định
+            if (detail && detail.length > 0 && detail[0].Name) {
+                filename = detail[0].Name;
             }
+
+            // Đảm bảo có phần mở rộng Excel
+            if (!filename.endsWith(".xlsx") && !filename.endsWith(".xls")) {
+                filename += ".xlsx";
+            }
+
             const file = new File([blob], filename, { type: blob.type });
 
             const uploadResp = await apiUtil.auth.uploadFileAsync(file);
             // console.log("xxxxxxxxx", detail);
             if (uploadResp.IsSuccess) {
                 const data = {
-                    FileID: detail[0].FileID,
-                    FileName: filename,
+                    FileId: detail[0].FileId,
+                    Name: filename,
                     Url: uploadResp.Result?.Url,
                     FullUrl: uploadResp.Result?.FullUrl,
-                    author: detail[0].author, // em có thể dùng input hoặc username nếu có
+                    Author: detail[0].author, // em có thể dùng input hoặc username nếu có
                 };
 
-                const insertResp = await apiUtil.auth.queryAsync('FileData_Update', data);
+                const insertResp = await apiUtil.auth.queryAsync('ExcelFile_Update', data);
 
                 if (insertResp.IsSuccess) {
                     Modal.success({ content: 'Tài liệu đã được lưu thành công!' });
                     onFetch()
                     onClose(); // đóng modal sau khi lưu
-                    const userNhan = [1, 3, 5]
-                    await realtimeService.sendAsync(JSON.stringify(userNhan))
+                    // await realtimeService.sendAsync("Save successfully")
                 } else {
                     Modal.error({ content: 'Lỗi khi lưu dữ liệu vào database.' });
                 }
@@ -99,25 +102,26 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
     };
 
     const handleCreate = async () => {
-        const sfdt = editorRef.current?.documentEditor.serialize();
-        // console.log("Document content:", sfdt);
+        const sfdt = await spreadsheetRef.current?.saveAsJson();
+        // console.log("Excel content:", sfdt);
 
         if (!sfdt) return;
 
         try {
             let filename = prompt("Please enter your filename") ?? "default";
-            const blob = new Blob([sfdt], { type: 'application/json' });
-            // Kiểm tra nếu chưa có phần mở rộng .txt thì mới thêm vào
-            if (!filename.endsWith(".txt")) {
-                filename += ".txt";
+            const blob = new Blob([JSON.stringify(sfdt)], { type: 'application/json' });
+            // Kiểm tra nếu tên file chưa có đuôi Excel thì thêm vào
+            if (!filename.endsWith(".xlsx") && !filename.endsWith(".xls")) {
+                filename += ".xlsx";
             }
+
             const file = new File([blob], filename, { type: blob.type });
             const uploadResp = await apiUtil.auth.uploadFileAsync(file);
             if (uploadResp.IsSuccess) {
                 const userInfo = getUserInfo()
                 // console.log("xxhhh", userInfo);
                 const data = {
-                    FileName: filename,
+                    Name: filename,
                     Url: uploadResp.Result?.Url,
                     FullUrl: uploadResp.Result?.FullUrl,
                     Username: "INTERNATIONAL UNIVERSITY",//TODO tên đối tác
@@ -126,7 +130,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                 // console.log("cvcvcv", data);
 
                 // Gọi api insert vào db
-                const isInsert = await apiUtil.auth.queryAsync('FileData_Insert', data);
+                const isInsert = await apiUtil.auth.queryAsync('ExcelFile_Insert', data);
 
                 if (isInsert.IsSuccess) {
                     Modal.success({ content: 'Template đã được lưu thành công!' });
@@ -150,57 +154,64 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             return;
         }
 
-        const response = await fetch(Url);
-
+        const response = await fetch('https://cdn.syncfusion.com/scripts/spreadsheet/Sample.xlsx');
         if (!response.ok) {
             console.error("Failed to fetch the file");
             return;
         }
 
-        let text: any;
-
-        const isDocxUrl = (url: string): boolean => {
+        const isExcelUrl = (url: string): boolean => {
             try {
-                const parsedUrl = new URL(url);
-                const pathname = parsedUrl.pathname.toLowerCase();
-                return pathname.endsWith(".docx") || pathname.endsWith(".doc");
-            } catch (error) {
-                console.error("Invalid URL:", error);
+                const pathname = new URL(url).pathname.toLowerCase();
+                return pathname.endsWith(".xlsx") || pathname.endsWith(".xls");
+            } catch {
                 return false;
             }
         };
 
-        if (isDocxUrl(Url)) {
-            const docxBlob = await response.blob();
+        let result: any;
 
-            // console.log('Uploading DOCX to Syncfusion server...');
-
-            const formData = new FormData();
-            formData.append('UploadFiles', new File([docxBlob], 'uploaded.docx', {
-                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            }));
-
-            const uploadResponse = await fetch('https://ej2services.syncfusion.com/production/web-services/api/documenteditor/Import', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!uploadResponse.ok) throw new Error(`Failed to convert DOCX: ${uploadResponse.statusText}`);
-            const result = await uploadResponse.text();
-
-            // console.log('SFDT Data received!', result);
-            text = result
+        if (isExcelUrl(Url)) {
+            const excelBlob = await response.blob();
+            result = new File([excelBlob], "Sample.xlsx");
+            console.log("Received data from Syncfusion:", result);
         } else {
-            text = await response.text();
-            // console.log(text);
+            result = await response.json();
         }
 
-        if (editorRef.current && editorRef.current.documentEditor) {
-            editorRef.current.documentEditor.open(text);
-        } else {
-            console.warn("editorRef or documentEditor is not ready yet.");
-        }
+        // Đảm bảo Spreadsheet đã sẵn sàng
+        setTimeout(() => {
+            if (spreadsheetRef.current) {
+                spreadsheetRef.current.open({ file: result });
+                console.log('result',result);
+                // let workbookData: any = null;
+
+                // // Nếu có field Workbook (API cloud)
+                // if (result?.Workbook) {
+                //     workbookData = result.Workbook;
+                // } else if (result?.sheets) {
+                //     // Nếu là file JSON local
+                //     workbookData = result;
+                // }
+
+                // if (workbookData) {
+                //     console.log("Opening workbook:", workbookData);
+                //     // ⚙️ Gọi đúng format mà Syncfusion yêu cầu
+                //     (spreadsheetRef.current as any).open(workbookData);
+                // } else {
+                //     console.warn("Không tìm thấy Workbook trong response:", result);
+                // }
+            } else {
+                console.warn("spreadsheetRef is not ready yet.");
+            }
+        }, 300);
+
+
+
+
     };
+
+
 
     const handleEnd = async () => {
         // console.log("file xxx", fileDataSelect);
@@ -211,7 +222,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             FileStatus: !isBothEnd ? 1 : 2
         }
 
-        await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
+        await apiUtil.auth.queryAsync('ExcelFileStatus_Update', data).then((resp) => {
             Modal.success({ content: 'Da end!' })
             onFetch()
             onClose()
@@ -247,15 +258,14 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
         >
             {isFullyOpen ? (
                 <div style={{ height: '600px' }}>
-                    <DocumentEditorContainerComponent
-                        id="container"
-                        height="100%"
-                        serviceUrl="https://ej2services.syncfusion.com/production/web-services/api/documenteditor/"
-                        enableToolbar={true}
-                        ref={editorRef}
-                    >
-                        <Inject services={[Toolbar]} />
-                    </DocumentEditorContainerComponent>
+                    <SpreadsheetComponent
+                        ref={spreadsheetRef}
+                        allowOpen
+                        allowSave
+                        openUrl="https://document.syncfusion.com/web-services/spreadsheet-editor/api/spreadsheet/open"
+                        saveUrl="https://document.syncfusion.com/web-services/spreadsheet-editor/api/spreadsheet/save"
+                        showFormulaBar
+                    />
                 </div>
             ) : null}
 
@@ -273,4 +283,4 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
 
     );
 }
-export default EditDetail;
+export default EditContent;

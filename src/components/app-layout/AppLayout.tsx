@@ -24,6 +24,7 @@ import { apiUtil } from '../../utils'
 import { useAppState } from './../../hooks'
 import { ModalChangePassword } from './components'
 import styles from './style.module.css'
+import realtimeService from '../../services/realtimeService'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -79,6 +80,17 @@ const AppLayout = (): React.JSX.Element => {
     useEffect(() => {
         const userInfo = getUserInfo()
         setRoleId(userInfo?.RoleId)
+        realtimeService.startAsync().then(() => {
+            realtimeService.joinAsync().then(() => {
+                realtimeService.onMessage(data => {
+                    data.Data
+                    console.log('onMessage', data)
+                })
+            })
+        })
+        return () => {
+            realtimeService.stopAsync()
+        }
     }, [])
 
     useEffect(() => {
@@ -177,7 +189,14 @@ const AppLayout = (): React.JSX.Element => {
                 ? [getItem(<Link to="/ManagingAccount/Personal-account">Personal File</Link>, 'personalfile')]
                 : []),
         ]),
-
+        getItem('Spreadsheet', 'spreadsheet', <SettingOutlined />, [
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/spreadsheet/excel-editor">Excel Editor</Link>, 'excelEditor', <IdcardOutlined />)]
+                : []),
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/spreadsheet/excel-list">Excel List</Link>, 'list', <IdcardOutlined />)]
+                : []),
+        ]),
 
         // ...(roleId !== 3
         //     ? [

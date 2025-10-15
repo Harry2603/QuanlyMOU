@@ -233,7 +233,7 @@ const apiUtil = {
                 const data = resp.data
                 if (data.IsSuccess === false) {
                     if (data.Message !== '') {
-                        message.error(data.Message)
+                        // message.error(data.Message)
                     }
                 }
                 return data
@@ -436,7 +436,13 @@ const apiUtil = {
         }
     },
     setToken: (token: string) => {
-        axiosInstance.defaults.headers.Authorization = `Brearer ${token}`
+        axiosInstance.defaults.headers.Authorization = `Bearer ${token}`
+    },
+    getToken: () => {
+        const auth: string = axiosInstance.defaults.headers.Authorization?.toString() ?? ''
+        const arr = auth.split(' ')
+        if (arr.length > 1) return arr[1]
+        return ''
     },
     clearToken: () => {
         delete axiosInstance.defaults.headers.Authorization

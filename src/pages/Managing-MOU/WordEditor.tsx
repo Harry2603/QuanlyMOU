@@ -6,6 +6,7 @@ import {
   DocumentEditor,
   WordExport,
   SfdtExport,
+  Selection,
 } from '@syncfusion/ej2-react-documenteditor';
 import './WordEditor.css';
 import { Button, Modal, Select, message } from 'antd';
@@ -14,11 +15,10 @@ import { DownloadOutlined } from '@ant-design/icons';
 import { apiUtil } from '../../utils';
 
 DocumentEditorContainerComponent.Inject(Toolbar)
-DocumentEditor.Inject(WordExport, SfdtExport)
+DocumentEditor.Inject(WordExport, SfdtExport,Selection)
 type SizeType = ConfigProviderProps['componentSize'];
 
 const WordEditor: React.FC = () => {
-  // let container = useRef<DocumentEditorContainerComponent>(null)
   const editorRef = useRef<DocumentEditorContainerComponent>(null)
 
   const [showDialog, setShowDialog] = useState(false);
@@ -247,6 +247,7 @@ const WordEditor: React.FC = () => {
         height="100%"
         serviceUrl="https://ej2services.syncfusion.com/production/web-services/api/documenteditor/"
         enableToolbar={true}
+        enableTrackChanges={true}
         ref={editorRef}
       >
         <Inject services={[Toolbar]} />

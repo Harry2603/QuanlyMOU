@@ -4,7 +4,6 @@ interface CategoryType {
     Description: string
    
 }
-
 interface FileDataType {
     FileID: number,
     FileName: string,
@@ -21,15 +20,6 @@ interface FileDataType {
     UsernameAuthor: string,
     UsernamePartner: string
 }
-
-interface UserInfoType {
-    AccessToken: string
-    FullName: string
-    RefreshToken: string
-    RoleId: number
-    UserName: string
-}
-
 interface EditDetailProps {
     isHideEnd?: boolean;
     isCreate?: boolean;
@@ -40,6 +30,39 @@ interface EditDetailProps {
     onClose: () => void;
     onFetch: () => void
 }
+interface ExcelFileType {
+    FileId: number,
+    Name: string,
+    FullUrl: string,
+    Url: string,
+    TenPartner: string,
+    CreateUser:string,
+    NguoiTao: string,
+    NguoiCapNhat: string,
+    Status_BothSide: boolean,
+    Status_Side: boolean,
+    Status_SignatureA: boolean,
+    Status_SignatureB: boolean,
+    UsernameAuthor: string,
+    UsernamePartner: string
+}
+interface DetailProps {
+    isHideEnd?: boolean;
+    isCreate?: boolean;
+    isModalOpen: boolean;
+    Url: string | null;
+    fileID: number | undefined
+    fileDataSelect: ExcelFileType | null | any
+    onClose: () => void;
+    onFetch: () => void
+}
+interface UserInfoType {
+    AccessToken: string
+    FullName: string
+    RefreshToken: string
+    RoleId: number
+    UserName: string
+}
 
 interface FileDetail {
     FileID: number
@@ -48,7 +71,13 @@ interface FileDetail {
     FullUrl: string
     author: string
 }
-
+interface ExcelDetail {
+    FileId: number
+    Name: string
+    Url: string
+    FullUrl: string
+    Author: string
+}
 interface UserListType {
     TenDangNhap: string
 

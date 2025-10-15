@@ -5,10 +5,12 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import './App.css'
 import { AppLayout, PublicAppLayout } from './components'
 import { useAppState } from './hooks'
-import { DocumentList, Template, DocumentListOfEmployee, LoginPage, ListOfCompany, PersonalFile, ListOfPostGraduateStudent, TheNumberOfGraduates, ComprehensiveAlumniManagement, WordEditor } from './pages'
+import { DocumentList, Template, DocumentListOfEmployee, LoginPage, ListOfCompany, PersonalFile, WordEditor } from './pages'
 import RegisterPage from './pages/login-page/RegisterPage'
 import Home from './pages/Home/Home'
 import Category from './pages/Managing-MOU/Category'
+import Spreadsheet from './pages/Excel/Spreadsheet'
+import ExcelList from './pages/Excel/ExcelList';
 
 function App() {
     const isLogin = useAppState(state => state.isLogin)
@@ -42,24 +44,28 @@ function App() {
                                     <Route path='wordeditor' element={<WordEditor />} />
                                 </Route>
 
+                                <Route path='spreadsheet' element={<Outlet />}>
+                                    <Route path='excel-editor' element={<Spreadsheet />} />
+                                    <Route path='excel-list' element={<ExcelList  />} />
+                                </Route>
+
                                 <Route path='ManagingAccount' element={<Outlet />}>
                                     <Route path='listofcompany' element={<ListOfCompany />} />
                                     <Route path='Personal-account' element={<PersonalFile />} />
-
                                 </Route>
 
-                                <Route path='ManagingStudent' element={<Outlet />}>
+                                {/* <Route path='ManagingStudent' element={<Outlet />}>
                                     <Route path='post-graduate' element={<ListOfPostGraduateStudent />} />
                                     <Route path='graduates' element={<TheNumberOfGraduates />} />
-                                    <Route path='alumni' element={<ComprehensiveAlumniManagement />} />
-                                    {/* <Route path='dashboard-csv' element={<DashboardCSV />} /> */}
-                                </Route>
+                                    <Route path='alumni' element={<ComprehensiveAlumniManagement />} /> */}
+                                {/* <Route path='dashboard-csv' element={<DashboardCSV />} /> */}
+                                {/* </Route> */}
                             </Route>
 
                             <Route path='template' element={<PublicAppLayout />} >
                                 <Route index element={<Template />} />
                             </Route>
-                            
+
                         </Route>
                     </Routes>
                 </BrowserRouter>

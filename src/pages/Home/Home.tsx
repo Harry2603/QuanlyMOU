@@ -24,7 +24,7 @@ const HomePage: React.FC = () => {
                             Customize in minutes and send out for signatures with ease. Ideal for startups,
                             agencies, and businesses of any size.
                         </Paragraph>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
+                        <div style={{ display: 'fle/x', justifyContent: 'center', marginTop: 40 }}>
                             <Button
                                 type="primary"
                                 className="hero-button"
