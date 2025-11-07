@@ -203,7 +203,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
     };
 
     const handleEnd = async () => {
-        // console.log("file xxx", fileDataSelect);
+        console.log("file xxx", fileDataSelect);
         const isBothEnd = !fileDataSelect?.Status_Side ? false : true
 
         const data = {

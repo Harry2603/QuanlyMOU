@@ -11,24 +11,24 @@ const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token"); // Kiểm tra quyền admin
 
-    const roleList = [
-        {
-            label: 'Admin',
-            value: 1
-        },
-        {
-            label: 'Employee',
-            value: 2
-        },
-        {
-            label: 'Customer',
-            value: 3
-        },
-        {
-            label: 'President',
-            value: 4
-        }
-    ]
+    // const roleList = [
+    //     {
+    //         label: 'Admin',
+    //         value: 1
+    //     },
+    //     {
+    //         label: 'Employee',
+    //         value: 2
+    //     },
+    //     {
+    //         label: 'Customer',
+    //         value: 3
+    //     },
+    //     {
+    //         label: 'President',
+    //         value: 4
+    //     }
+    // ]
 
     // ✅ Kiểm tra quyền Admin
     useEffect(() => {
@@ -39,7 +39,19 @@ const RegisterPage: React.FC = () => {
 
     const onFinish = async (formData: FieldType) => {
         setIsBusy(true);
-        const { Username, Password, Role, MaDN, TenDN, DiaChi, SDT, Email, NguoiDaiDien, Website, NgayThanhLap, GhiChu } = formData;
+        const { 
+            Username, 
+            Password, 
+            Role, 
+            MaDN, 
+            TenDN, 
+            DiaChi, 
+            SDT, 
+            Email, 
+            NguoiDaiDien, 
+            Website, 
+            NgayThanhLap, 
+            GhiChu } = formData;
 
         try {
 
@@ -72,7 +84,7 @@ const RegisterPage: React.FC = () => {
 
             const passHash = passwordResp.Result as any
             console.log("pass", passHash.PasswordHash);
-            //  3️⃣ Định nghĩa RoleId cho UsepasswordResp.Resultr
+            //  Định nghĩa RoleId cho UsepasswordResp.Resultr
             console.log("user name", Username);
 
             //  4️ Gửi request đăng ký tài khoản

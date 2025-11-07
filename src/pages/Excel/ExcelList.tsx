@@ -69,11 +69,11 @@ const ExcelList: React.FC = () => {
 
     const A_approved = async (record: ExcelFileType) => {
         const data = {
-            FileID: record.FileId,
+            FileId: record.FileId,
             FileStatus: 3
         }
 
-        await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
+        await apiUtil.auth.queryAsync('ExcelFileStatus_Update', data).then((resp) => {
             Modal.success({ content: 'A signed successful!' })
             fetchData()
 
@@ -85,11 +85,11 @@ const ExcelList: React.FC = () => {
 
     const B_approved = async (record: ExcelFileType) => {
         const data = {
-            FileID: record.FileId,
+            FileId: record.FileId,
             FileStatus: 4
         }
 
-        await apiUtil.auth.queryAsync('FileDataStatus_Update', data).then((resp) => {
+        await apiUtil.auth.queryAsync('ExcelFileStatus_Update', data).then((resp) => {
             Modal.success({ content: 'B signed successful!' })
             fetchData()
 

@@ -44,26 +44,23 @@ const Spreadsheet: React.FC = () => {
       return null;
     }
   }
-
   const handleOk = async () => {
     const spreadsheet = spreadsheetRef.current;
     if (!spreadsheet) return;
 
-    if (!fileName) {
-      message.warning("Vui lòng nhập File Name!");
-      return;
-    }
-    if (!userSelect) {
-      message.warning("Vui lòng chọn Account Name!");
-      return;
-    }
+    // spreadsheet.endEdit?.();
 
+    spreadsheet.beforeSave = (args) => {
+      args.needBlobData = true;
+      args.isFullPost = true; // 🔥 Quan trọng
+    };
+
+    spreadsheet.endEdit?.();
+    spreadsheet.notify('beforeSave', {}); // Ghi lại trạng thái merge
+    spreadsheet.refresh();                // Cập nhật layout
+    spreadsheet.saveComplete = saveComplete;
     spreadsheet.save();
-  };
 
-  const beforeSave = (args: any) => {
-    args.needBlobData = true;
-    args.isFullPost = false;
   };
 
   const saveComplete = async (args: any) => {
@@ -149,9 +146,16 @@ const Spreadsheet: React.FC = () => {
 
       <SpreadsheetComponent
         ref={spreadsheetRef}
+        {...({ allowMultiSelection: true } as any)}
+        allowFreezePane={true}          // Cho phép cố định hàng/cột
+        allowDataValidation={true}      // Cho phép tạo rule dữ liệu (dropdown, số, text)
+        allowConditionalFormat={true}   // Cho phép tô màu theo điều kiện
+        allowNumberFormatting={true}    // Cho phép định dạng số
+        allowCellFormatting={true}      // Cho phép đổi font, màu chữ, merge
+        allowWrap={true}                // Cho phép xuống dòng trong ô
         allowOpen
         allowSave
-        beforeSave={beforeSave}
+        // beforeSave={beforeSave}
         saveComplete={saveComplete}
         openUrl="https://document.syncfusion.com/web-services/spreadsheet-editor/api/spreadsheet/open"
         saveUrl="https://document.syncfusion.com/web-services/spreadsheet-editor/api/spreadsheet/save"
