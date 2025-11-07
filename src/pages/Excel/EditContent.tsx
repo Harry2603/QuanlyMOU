@@ -52,7 +52,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
 
             const detail: any = isSelectDetail.Result as ExcelDetail
 
-            if (detail.lenght < 0) {
+            if (detail.length < 0) {
                 Modal.error({ content: 'detail không có dữ liệu' })
                 return
             }
@@ -79,7 +79,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
                     Name: filename,
                     Url: uploadResp.Result?.Url,
                     FullUrl: uploadResp.Result?.FullUrl,
-                    Author: detail[0].author, // em có thể dùng input hoặc username nếu có
+                    Author: detail[0].Author, // em có thể dùng input hoặc username nếu có
                 };
 
                 const insertResp = await apiUtil.auth.queryAsync('ExcelFile_Update', data);
@@ -149,67 +149,64 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
     };
 
     const fetchData = async () => {
-        if (!Url) {
-            Modal.error({ content: "URL không hợp lệ." });
-            return;
-        }
-
-        const response = await fetch('https://cdn.syncfusion.com/scripts/spreadsheet/Sample.xlsx');
-        if (!response.ok) {
-            console.error("Failed to fetch the file");
-            return;
-        }
-
-        const isExcelUrl = (url: string): boolean => {
-            try {
-                const pathname = new URL(url).pathname.toLowerCase();
-                return pathname.endsWith(".xlsx") || pathname.endsWith(".xls");
-            } catch {
-                return false;
+        try {
+            if (!Url) {
+                Modal.error({ content: "URL không hợp lệ." });
+                return;
             }
-        };
 
-        let result: any;
+            const response = await fetch(Url);
+            const contentType = response.headers.get("content-type") || "";
+            console.log("📄 Response content-type:", contentType);
 
-        if (isExcelUrl(Url)) {
-            const excelBlob = await response.blob();
-            result = new File([excelBlob], "Sample.xlsx");
-            console.log("Received data from Syncfusion:", result);
-        } else {
-            result = await response.json();
-        }
+            if (!response.ok) {
+                Modal.error({ content: "Không thể tải file." });
+                return;
+            }
 
-        // Đảm bảo Spreadsheet đã sẵn sàng
-        setTimeout(() => {
-            if (spreadsheetRef.current) {
-                spreadsheetRef.current.open({ file: result });
-                console.log('result',result);
-                // let workbookData: any = null;
+            // ✅ Bắt buộc đọc blob (dù là Excel hay JSON)
+            const blob = await response.blob();
 
-                // // Nếu có field Workbook (API cloud)
-                // if (result?.Workbook) {
-                //     workbookData = result.Workbook;
-                // } else if (result?.sheets) {
-                //     // Nếu là file JSON local
-                //     workbookData = result;
-                // }
+            // ✅ Điều kiện nhận diện file Excel
+            const isExcelFile =
+                contentType.includes("sheet") ||
+                contentType.includes("excel") ||
+                contentType === "application/octet-stream" ||
+                Url.toLowerCase().endsWith(".xlsx") ||
+                Url.toLowerCase().endsWith(".xls");
 
-                // if (workbookData) {
-                //     console.log("Opening workbook:", workbookData);
-                //     // ⚙️ Gọi đúng format mà Syncfusion yêu cầu
-                //     (spreadsheetRef.current as any).open(workbookData);
-                // } else {
-                //     console.warn("Không tìm thấy Workbook trong response:", result);
-                // }
+            const spreadsheet = spreadsheetRef.current;
+            if (!spreadsheet) {
+                console.warn("Spreadsheet chưa sẵn sàng để mở file.");
+                return;
+            }
+
+            if (isExcelFile) {
+                // ✅ Excel thật: mở bằng open({ file })
+                const file = new File([blob], "data.xlsx", {
+                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                });
+                spreadsheet.open({ file });
+                console.log("✅ Đã mở file Excel thành công:", Url);
             } else {
-                console.warn("spreadsheetRef is not ready yet.");
+                // ✅ JSON thật (ví dụ exportFromJson)
+                const text = await blob.text();
+                try {
+                    const json = JSON.parse(text);
+                    spreadsheet.openFromJson({ file: json });
+                    console.log("✅ Đã mở file JSON thành công:", Url);
+                } catch (e) {
+                    console.error("⚠️ File không phải JSON hợp lệ:", e);
+                    Modal.error({ content: "Định dạng file không hợp lệ hoặc bị lỗi." });
+                }
             }
-        }, 300);
-
-
-
-
+        } catch (error) {
+            console.error("❌ Lỗi khi tải file:", error);
+            Modal.error({ content: "Không thể tải nội dung file. Vui lòng thử lại." });
+        }
     };
+
+
 
 
 
@@ -218,7 +215,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
         const isBothEnd = !fileDataSelect?.Status_Side ? false : true
 
         const data = {
-            FileID: fileDataSelect?.FileID,
+            FileID: fileDataSelect?.FileId,
             FileStatus: !isBothEnd ? 1 : 2
         }
 

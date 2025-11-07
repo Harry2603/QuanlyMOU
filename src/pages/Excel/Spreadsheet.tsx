@@ -44,50 +44,11 @@ const Spreadsheet: React.FC = () => {
       return null;
     }
   }
-  const fetchExcelData = async (url: string) => {
-    if (!spreadsheetRef.current) return;
 
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        console.error("❌ Failed to fetch file:", response.statusText);
-        return;
-      }
-
-      const isExcelUrl = (url: string) => {
-        return url.endsWith(".xlsx") || url.endsWith(".xls");
-      };
-
-      let jsonData: any;
-
-      if (isExcelUrl(url)) {
-        // Nếu là Excel → convert qua Syncfusion Import API
-        const excelBlob = await response.blob();
-        const formData = new FormData();
-        formData.append("files", excelBlob, "uploaded.xlsx");
-
-        const uploadResp = await fetch(
-          "https://services.syncfusion.com/react/production/api/spreadsheet/import",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!uploadResp.ok) throw new Error("Convert Excel thất bại!");
-        jsonData = await uploadResp.json();
-      } else {
-        // Nếu đã là JSON thì load trực tiếp
-        jsonData = await response.json();
-      }
-
-      spreadsheetRef.current.open(jsonData);
-    } catch (err) {
-      console.error("⚠️ Error loading file:", err);
-    }
-  };
   const handleOk = async () => {
-    if (!spreadsheetRef.current) return;
+    const spreadsheet = spreadsheetRef.current;
+    if (!spreadsheet) return;
+
     if (!fileName) {
       message.warning("Vui lòng nhập File Name!");
       return;
@@ -96,46 +57,61 @@ const Spreadsheet: React.FC = () => {
       message.warning("Vui lòng chọn Account Name!");
       return;
     }
-    try {
-      // Lấy JSON từ Spreadsheet
-      const json = await spreadsheetRef.current.saveAsJson();
-      const blob = new Blob([JSON.stringify(json)], { type: "application/json" });
-      const file = new File([blob], `${fileName}.xlsx`, { type: "application/json" });
-      console.log("File chuẩn bị upload:", file);
-      // Upload file lên server
-      const uploadResp = await apiUtil.auth.uploadFileAsync(file);
-      console.log("Upload response:", uploadResp);
-      if (uploadResp.IsSuccess) {
-        const userInfo = getUserInfo()
-        // Insert DB
-        const data = {
-          Name: fileName,
-          Url: uploadResp.Result?.Url,
-          FullUrl: uploadResp.Result?.FullUrl,
-          Username: userSelect,
-          AuthorUsername: userInfo?.UserName
-        };
 
-        const isInsert = await apiUtil.auth.queryAsync("ExcelFile_Insert", data);
+    spreadsheet.save();
+  };
 
-        if (isInsert.IsSuccess) {
-          message.success("Lưu file Excel thành công!");
-          setIsModalOpen(false);
-        } else {
-          message.error("Lưu DB thất bại!");
-        }
-      } else {
-        message.error("Upload file thất bại!");
-      }
-    } catch (err) {
-      console.error("Error saving file:", err);
+  const beforeSave = (args: any) => {
+    args.needBlobData = true;
+    args.isFullPost = false;
+  };
+
+  const saveComplete = async (args: any) => {
+    console.log('Save complete event triggered:', args);
+    console.log('Blob data type:', args.blobData?.type);
+    const blobData = args.blobData;
+    if (!blobData) {
+      message.error("Không lấy được file Blob Excel!");
+      return;
+    }
+
+    const file = new File([blobData], `${fileName}.xlsx`, {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    console.log("Blob file Excel:", file);
+
+    // Upload file lên server
+    const uploadResp = await apiUtil.auth.uploadFileAsync(file);
+    if (!uploadResp.IsSuccess) {
+      message.error("Upload file thất bại!");
+      return;
+    }
+
+    const userInfo = getUserInfo();
+    const data = {
+      Name: fileName,
+      Url: uploadResp.Result?.Url,
+      FullUrl: uploadResp.Result?.FullUrl,
+      Username: userSelect,
+      AuthorUsername: userInfo?.UserName,
+    };
+
+    const isInsert = await apiUtil.auth.queryAsync("ExcelFile_Insert", data);
+    if (isInsert.IsSuccess) {
+      message.success("Lưu file Excel thành công!");
+      setIsModalOpen(false);
+    } else {
+      message.error("Lưu DB thất bại!");
     }
   };
+
+
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const templateUrl = queryParams.get('templateUrl');
     if (templateUrl) {
-      fetchExcelData(templateUrl)
+      // fetchExcelData(templateUrl)
     }
     onLoadUserList();
     getUserInfo();
@@ -175,6 +151,8 @@ const Spreadsheet: React.FC = () => {
         ref={spreadsheetRef}
         allowOpen
         allowSave
+        beforeSave={beforeSave}
+        saveComplete={saveComplete}
         openUrl="https://document.syncfusion.com/web-services/spreadsheet-editor/api/spreadsheet/open"
         saveUrl="https://document.syncfusion.com/web-services/spreadsheet-editor/api/spreadsheet/save"
         showFormulaBar
