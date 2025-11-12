@@ -61,6 +61,7 @@ interface UserInfoType {
     FullName: string
     RefreshToken: string
     RoleId: number
+    UserId:number
     UserName: string
 }
 
@@ -80,7 +81,7 @@ interface ExcelDetail {
 }
 interface UserListType {
     TenDangNhap: string
-
+    UserId:number
 }
 
 interface UploadResult {

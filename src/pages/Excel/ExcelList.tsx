@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Space, Table, Button, Input, Typography, Tag, Modal } from 'antd';
+import { Space, Table, Button, Input, Typography, Tag, Modal, Select } from 'antd';
 
-import { EditOutlined, VerticalAlignBottomOutlined } from '@ant-design/icons';
+import { EditOutlined, VerticalAlignBottomOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiUtil } from '../../utils';
 import EditContent from './EditContent';
@@ -20,9 +20,15 @@ const ExcelList: React.FC = () => {
     const [username, setUsername] = useState<string>()
     const { Title } = Typography;
     const [searchText, setSearchText] = useState<string>('');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [userList, setUserList] = useState<UserListType[]>([])
+    const [userSelect, setUserSelect] = useState<string>()
+    const [selectedPermission, setSelectedPermission] = useState<string>('');
+
 
     const getUserInfo = (): UserInfoType | null => {
         const userInfoString = localStorage.getItem('userInfo');
+        // console.log('userinfotype',userInfoString)
         try {
             if (userInfoString) {
                 return JSON.parse(userInfoString);
@@ -33,7 +39,6 @@ const ExcelList: React.FC = () => {
             return null;
         }
     }
-
 
     const handleEdit = (record: ExcelFileType) => {
         setEditUrl(record.FullUrl);
@@ -48,9 +53,6 @@ const ExcelList: React.FC = () => {
             if (res.IsSuccess) {
                 const currentUser = getUserInfo(); // Lấy thông tin user hiện tại
                 const myUsername = currentUser?.UserName; // lấy Username
-
-
-
                 const result = (res.Result as any[]).map((item: any, index: number) => ({
                     ...item,
                     key: index,
@@ -100,13 +102,13 @@ const ExcelList: React.FC = () => {
     }
 
     useEffect(() => {
+        onLoadUserList();
         fetchData();
         const userInfo = getUserInfo()
         setUsername(userInfo?.UserName)
     }, []);
 
     // Hàm Search
-
     const onSearch = (value: string) => {
         setSearchText(value);
         const keyword = value.toLowerCase();
@@ -117,7 +119,99 @@ const ExcelList: React.FC = () => {
         // console.log("object", result);
         setFilteredData(result);
     };
+    // Hàm khi bấm nút Add
+    const handleOpenModal = (fileId: number) => {
+        setSelectedFileId(fileId);
+        setIsAddModalOpen(true);
+    };
 
+    // Hàm đóng modal
+    const handleCloseAddModal = () => {
+        setIsAddModalOpen(false);
+    };
+    const handleSaveAddUser = async () => {
+        // Kiểm tra input
+        if (!userSelect) {
+            Modal.warning({ content: "Vui lòng chọn tài khoản!" });
+            return;
+        }
+        if (!selectedPermission) {
+            Modal.warning({ content: "Vui lòng chọn quyền truy cập!" });
+            return;
+        }
+        if (!selectedFileId) {
+            Modal.error({ content: "Không xác định được file cần thêm quyền!" });
+            return;
+        }
+
+        // Lấy thông tin người thao tác
+        const currentUser = getUserInfo();
+        // console.log("currentUser:", currentUser);
+        if (!currentUser?.RoleId) {
+            Modal.error({ content: "Không tìm thấy thông tin người dùng hiện tại!" });
+            return;
+        }
+
+        try {
+            // Gọi API để lấy thông tin người được chọn (để có UserId)
+            const selectedUser = userList.find(u => u.TenDangNhap === userSelect);
+            if (!selectedUser) {
+                Modal.error({ content: "Không tìm thấy người dùng được chọn!" });
+                return;
+            }
+
+            // Chuẩn bị dữ liệu gửi API
+            const payload = {
+                // SysUserId: currentUser.UserId,
+                FileId: selectedFileId,
+                UserId: selectedUser.UserId,   // người được thêm quyền
+                AccessType: selectedPermission // 'Viewer' hoặc 'Editor'
+            };
+            console.log('payload', payload)
+            // Gọi API
+            const res = await apiUtil.auth.queryAsync("ExcelFileAccess_Insert", payload);
+
+            // Kiểm tra kết quả
+            if (res.IsSuccess) {
+                Modal.success({ content: "Thêm quyền truy cập thành công!" });
+                setIsAddModalOpen(false);
+                setUserSelect('');
+                setSelectedPermission('');
+            } else {
+                Modal.error({ content: res.Message || "Không thể thêm quyền truy cập!" });
+            }
+        } catch (error) {
+            console.error("Error adding user:", error);
+            Modal.error({ content: "Có lỗi xảy ra khi thêm quyền truy cập!" });
+        }
+    };
+
+    const onLoadUserList = async () => {
+        await apiUtil.auth.queryAsync<UserListType[]>('CoreUser_Select')
+            .then(resp => {
+                const data = resp.Result?.map((item, index) => {
+                    return {
+                        ...item,
+                        label: item.TenDangNhap,
+                        value: item.TenDangNhap,
+                        key: index + 1
+                    }
+                })
+                console.log('data',data)
+                setUserList(data ?? [])
+            })
+            .catch((error) => {
+                console.error("Error loading doanh nghiep list:", error);
+            });
+    };
+
+    const handleChange = (value: string) => {
+        setUserSelect(value);
+        // console.log("Selected:", value); // debug nếu cần
+    }
+    const onChange = (value: string) => {
+        // console.log(`selected ${value}`);
+    };
     const columns: ColumnsType<any> = [
         {
             title: 'MOU_Number',
@@ -213,6 +307,11 @@ const ExcelList: React.FC = () => {
                         // onClick={() => loadAndDownload('Docx', record.FullUrl)}
                         className="px-4 py-2 bg-green-600 text-white rounded">
                     </VerticalAlignBottomOutlined>
+                    <PlusOutlined
+                        style={{ color: 'green' }}
+                        // onClick={() => handleAddUser(record)}
+                        onClick={() => handleOpenModal(record.FileId)}
+                    />
                 </Space>
             ),
         },
@@ -233,8 +332,48 @@ const ExcelList: React.FC = () => {
                     />
                 </div>
                 {/* <Table columns={columns} dataSource={dataSource} loading={loading} /> */}
-                <Table columns={columns} dataSource={filteredData.length > 0 || searchText ? filteredData : dataSource} loading={loading} />
+                <Table
+                    columns={columns} dataSource={filteredData.length > 0 || searchText ? filteredData : dataSource}
+                    loading={loading} />
 
+                <Modal
+                    title="Thêm người dùng vào file"
+                    open={isAddModalOpen}
+                    onCancel={handleCloseAddModal}
+                    onOk={handleSaveAddUser}
+                    maskClosable={false}
+                    okText="Save"
+                    cancelText="Cancel"
+                >
+                    <div style={{ marginBottom: 12 }}>
+                        <label>Account Name :</label>
+                        <Select
+                            onChange={handleChange}
+                            style={{ width: "100%" }}
+                            options={userList}
+                            placeholder="Select a account"
+                        />
+                    </div>
+                    <div>
+                        <label>Permission :</label>
+                        <Select
+                            style={{ width: "100%" }}
+                            placeholder="Select a permission"
+                            value={selectedPermission || undefined}
+                            onChange={(value) => setSelectedPermission(value)}
+                            options={[
+                                {
+                                    value: 'Viewer',
+                                    label: 'Viewer',
+                                },
+                                {
+                                    value: 'Editor',
+                                    label: 'Editor',
+                                },
+                            ]}
+                        />
+                    </div>
+                </Modal>
                 <EditContent
                     isModalOpen={isModalOpen}
                     Url={editUrl}

@@ -9,12 +9,15 @@ const Spreadsheet: React.FC = () => {
   const [userList, setUserList] = useState<UserListType[]>([])
   const [userSelect, setUserSelect] = useState<string>()
   const [fileName, setFilename] = useState('');
+  
   const showModal = () => setIsModalOpen(true);
   const handleCancel = () => setIsModalOpen(false);
+
   const handleChange = (value: string) => {
     setUserSelect(value);
     console.log("Selected:", value); // debug nếu cần
   }
+  
   const onLoadUserList = async () => {
     await apiUtil.auth.queryAsync<UserListType[]>('CoreUser_Select')
       .then(resp => {

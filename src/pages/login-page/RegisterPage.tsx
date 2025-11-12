@@ -11,25 +11,6 @@ const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token"); // Kiểm tra quyền admin
 
-    // const roleList = [
-    //     {
-    //         label: 'Admin',
-    //         value: 1
-    //     },
-    //     {
-    //         label: 'Employee',
-    //         value: 2
-    //     },
-    //     {
-    //         label: 'Customer',
-    //         value: 3
-    //     },
-    //     {
-    //         label: 'President',
-    //         value: 4
-    //     }
-    // ]
-
     // ✅ Kiểm tra quyền Admin
     useEffect(() => {
     }, [token, navigate]);
