@@ -11,6 +11,7 @@ import Home from './pages/Home/Home'
 import Category from './pages/Managing-MOU/Category'
 import Spreadsheet from './pages/Excel/Spreadsheet'
 import ExcelList from './pages/Excel/ExcelList';
+import AccessTypeList from './pages/Excel/ManageAccess'
 
 function App() {
     const isLogin = useAppState(state => state.isLogin)
@@ -47,6 +48,7 @@ function App() {
                                 <Route path='spreadsheet' element={<Outlet />}>
                                     <Route path='excel-editor' element={<Spreadsheet />} />
                                     <Route path='excel-list' element={<ExcelList  />} />
+                                    <Route path='accesstype-list' element={<AccessTypeList  />} />
                                 </Route>
 
                                 <Route path='ManagingAccount' element={<Outlet />}>

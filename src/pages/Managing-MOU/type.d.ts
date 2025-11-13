@@ -2,7 +2,7 @@ interface CategoryType {
     Id: number
     Name: string
     Description: string
-   
+
 }
 interface FileDataType {
     FileID: number,
@@ -10,7 +10,7 @@ interface FileDataType {
     FullUrl: string,
     Url: string,
     TenPartner: string,
-    CreateUser:string,
+    CreateUser: string,
     NguoiTao: string,
     NguoiCapNhat: string,
     Status_BothSide: boolean,
@@ -36,7 +36,7 @@ interface ExcelFileType {
     FullUrl: string,
     Url: string,
     TenPartner: string,
-    CreateUser:string,
+    CreateUser: string,
     NguoiTao: string,
     NguoiCapNhat: string,
     Status_BothSide: boolean,
@@ -44,7 +44,7 @@ interface ExcelFileType {
     Status_SignatureA: boolean,
     Status_SignatureB: boolean,
     UsernameAuthor: string,
-    UsernamePartner: string
+    UsernamePartner: string,
 }
 interface DetailProps {
     isHideEnd?: boolean;
@@ -56,12 +56,22 @@ interface DetailProps {
     onClose: () => void;
     onFetch: () => void
 }
+interface AccessType {
+    ID: number;              // khóa chính
+    FileId: number;          // ID file Excel
+    UserId: number;          // ID user được phân quyền
+    AccessType: string;      // viewer / editor / ...
+    // UserName?: string;     // tên người dùng
+    ViewerName: string;   // tên nếu quyền viewer
+    EditorName: string; 
+}
+
 interface UserInfoType {
     AccessToken: string
     FullName: string
     RefreshToken: string
     RoleId: number
-    UserId:number
+    UserId: number
     UserName: string
 }
 
@@ -81,7 +91,7 @@ interface ExcelDetail {
 }
 interface UserListType {
     TenDangNhap: string
-    UserId:number
+    UserId: number
 }
 
 interface UploadResult {

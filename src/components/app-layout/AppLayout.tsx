@@ -196,6 +196,9 @@ const AppLayout = (): React.JSX.Element => {
             ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
                 ? [getItem(<Link to="/spreadsheet/excel-list">Excel List</Link>, 'list', <IdcardOutlined />)]
                 : []),
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/spreadsheet/accesstype-list">Access Type List</Link>, 'typelist', <IdcardOutlined />)]
+                : []),
         ]),
 
         // ...(roleId !== 3

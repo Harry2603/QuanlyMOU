@@ -49,7 +49,6 @@ const App: React.FC = () => {
             const editor = hiddenEditorRef.current;
             if (editor) {
                 editor.open(sfdtText);
-
                 // Wait a bit to ensure the document is loaded before saving
                 setTimeout(() => {
                     editor.save(`MyDocument.${format.toLowerCase()}`, format);

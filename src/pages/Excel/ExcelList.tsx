@@ -1,21 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Space, Table, Button, Input, Typography, Tag, Modal, Select } from 'antd';
 
-import { EditOutlined, VerticalAlignBottomOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, VerticalAlignBottomOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiUtil } from '../../utils';
 import EditContent from './EditContent';
 import { SpreadsheetComponent } from '@syncfusion/ej2-react-spreadsheet';
 const ExcelList: React.FC = () => {
     const spreadsheetRef = useRef<SpreadsheetComponent | null>(null);
-    const [dataSource, setDataSource] = useState<FileDataType[]>([]);
+    const [dataSource, setDataSource] = useState<ExcelFileType[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editUrl, setEditUrl] = useState<string | null>(null); // Thêm dòng này
     const [selectedFileId, setSelectedFileId] = useState<number>()
     const hiddenEditorRef = useRef<SpreadsheetComponent>(null)
     const { Search } = Input;
-    const [filteredData, setFilteredData] = useState<FileDataType[]>([]);
+    const [filteredData, setFilteredData] = useState<ExcelFileType[]>([]);
     const [fileDataSelect, setFileDataSelect] = useState<ExcelFileType | null>(null)
     const [username, setUsername] = useState<string>()
     const { Title } = Typography;
@@ -101,6 +101,54 @@ const ExcelList: React.FC = () => {
         })
     }
 
+    const handleDelete = async (record: any) => {
+        Modal.confirm({
+            title: 'Delete Confirm',
+            content: `Do you want to delete file "${record.Name}" ?`,
+            okText: 'Delete',
+            okType: 'primary',
+            cancelText: 'Cancel',
+            async onOk() {
+                try {
+                    const res = await apiUtil.auth.queryAsync('ExcelFile_Delete', {
+                        FileId: record.FileId,
+                    });
+                    if (res.IsSuccess) {
+                        Modal.success({ content: 'Delete Successful !' });
+                        fetchData();
+                    } else {
+                        Modal.error({ content: res.Message || 'Delete Fail !' });
+                    }
+                } catch (err) {
+                    console.error('Error Delete:', err);
+                    Modal.error({ content: 'Error when Delete!' });
+                }
+            },
+        });
+    };
+    const loadAndDownload = async (fullUrl: string, fileName: string) => {
+        try {
+            const response = await fetch(fullUrl);
+            if (!response.ok) throw new Error('Không tìm thấy file trên server.');
+            console.log('Content-Type:', response.headers.get('content-type'));
+            const blob = await response.blob();
+            console.log('Blob type:', blob.type, 'size:', blob.size);
+            // Tạo link ẩn để trigger download
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName || 'DownloadedFile';
+            document.body.appendChild(link);
+            link.click();
+
+            // Dọn dẹp
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Lỗi tải file:', error);
+        }
+    };
+
     useEffect(() => {
         onLoadUserList();
         fetchData();
@@ -113,7 +161,7 @@ const ExcelList: React.FC = () => {
         setSearchText(value);
         const keyword = value.toLowerCase();
         const result = dataSource.filter(item =>
-            (item.FileName?.toLowerCase() ?? '').includes(keyword) ||
+            (item.Name?.toLowerCase() ?? '').includes(keyword) ||
             (item.NguoiTao?.toLowerCase() ?? '').includes(keyword)
         );
         // console.log("object", result);
@@ -128,6 +176,10 @@ const ExcelList: React.FC = () => {
     // Hàm đóng modal
     const handleCloseAddModal = () => {
         setIsAddModalOpen(false);
+        // reset các field trong modal
+        setUserSelect('');          // hoặc undefined
+        setSelectedPermission('');  // reset quyền
+        setSelectedFileId(undefined);
     };
     const handleSaveAddUser = async () => {
         // Kiểm tra input
@@ -197,7 +249,7 @@ const ExcelList: React.FC = () => {
                         key: index + 1
                     }
                 })
-                console.log('data',data)
+                console.log('data', data)
                 setUserList(data ?? [])
             })
             .catch((error) => {
@@ -301,16 +353,22 @@ const ExcelList: React.FC = () => {
             width: '20%',
             render: (_: any, record: any) => (
                 <Space size="middle">
-                    <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
+                    <EditOutlined
+                        style={{ color: 'blue' }}
+                        onClick={() => handleEdit(record)} />
                     <VerticalAlignBottomOutlined
-                        style={{ color: 'red' }}
-                        // onClick={() => loadAndDownload('Docx', record.FullUrl)}
-                        className="px-4 py-2 bg-green-600 text-white rounded">
+                        style={{ color: 'purple' }}
+                        onClick={() => loadAndDownload(record.FullUrl, record.Name)}
+                    // className="px-4 py-2 bg-green-600 text-white rounded"
+                    >
                     </VerticalAlignBottomOutlined>
                     <PlusOutlined
                         style={{ color: 'green' }}
-                        // onClick={() => handleAddUser(record)}
                         onClick={() => handleOpenModal(record.FileId)}
+                    />
+                    <DeleteOutlined
+                        style={{ color: 'red' }}
+                        onClick={() => handleDelete(record)}
                     />
                 </Space>
             ),
@@ -352,6 +410,7 @@ const ExcelList: React.FC = () => {
                             style={{ width: "100%" }}
                             options={userList}
                             placeholder="Select a account"
+                            value={userSelect || undefined}
                         />
                     </div>
                     <div>
