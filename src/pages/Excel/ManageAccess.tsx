@@ -2,17 +2,23 @@ import type { ColumnsType } from 'antd/es/table';
 import React, { useEffect, useRef, useState } from 'react';
 import { Space, Table, Button, Input, Typography, Tag, Modal, Select } from 'antd';
 import { apiUtil } from '../../utils';
-
+import { EllipsisOutlined } from '@ant-design/icons';
 
 const AccessTypeList: React.FC = () => {
     const [userList, setUserList] = useState<UserListType[]>([])
-    const [dataSource, setDataSource] = useState<ExcelFileType[]>([])
     const [accessList, setAccessList] = useState<AccessType[]>([]);
-    const [filteredData, setFilteredData] = useState<ExcelFileType[]>([])
-    const [combinedData, setCombinedData] = useState<ExcelFileType[]>([]);
-    const [searchText, setSearchText] = useState<string>('')
+    const [rawAccess, setRawAccess] = useState<any[]>([]);
+    const [selectedID, setSelectedID] = useState<number | null>(null)
+    const [permission, setPermission] = useState<string>("");;
     const [username, setUsername] = useState<string>()
     const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalType, setModalType] = useState<'viewer' | 'editor' | null>(null);
+    const [selectOptions, setSelectOptions] = useState<any[]>([]);
+    const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+    const { Title } = Typography;
 
     const onLoadUserList = async () => {
         await apiUtil.auth.queryAsync<UserListType[]>('CoreUser_Select')
@@ -45,49 +51,54 @@ const AccessTypeList: React.FC = () => {
             return null;
         }
     }
-    const getExcelList = async () => {
-        try {
-            const res = await apiUtil.auth.queryAsync('ExcelFile_Select', {});
 
-            if (res.IsSuccess) {
-                const excelList = res.Result; // danh sách file trả về
-                console.log('Danh sách file Excel:', excelList);
-                const result = (res.Result as any[]).map((item: any, index: number) => ({
-                    ...item,
-                    key: index,
-                }));
-                setFilteredData(result);
-            } else {
-                console.error('Lấy danh sách file Excel thất bại:', res.Message);
-                return [];
-            }
-        } catch (error) {
-            console.error('Lỗi khi gọi API ExcelFile_Select:', error);
-            return [];
-        }
-    };
     const getAccessType = async () => {
         setLoading(true);
-
         try {
             const userInfo = getUserInfo();
             if (!userInfo) {
                 throw new Error('Không tìm thấy thông tin user');
             }
-
             // Gọi API, không cần truyền filter gì (nếu cần filter thì thêm param vào {})
             const res = await apiUtil.auth.queryAsync('ExcelFileAccess_Select', {});
-
-            console.log('res excelfileaccess', res);
-
+            // console.log('res excelfileaccess', res);
             if (res.IsSuccess) {
-                const result = (res.Result as any[]).map((item: any, index: number) => ({
-                    key: item.ID ?? index,   // rowKey
-                    ...item,                // giữ nguyên: ID, FileId, UserId, UserName, AccessType, ...
+                const raw = res.Result as any[];
+                // Gom nhóm theo FileId
+                const grouped = Object.values(
+                    raw.reduce((acc: any, item: any) => {
+                        const fileId = item.FileId;
+                        if (!acc[fileId]) {
+                            acc[fileId] = {
+                                key: fileId,
+                                FileId: fileId,
+                                Name: item.FileName ?? `File ${fileId}`, // hoặc lấy từ join với ExcelFile_Select
+                                ViewerName: [],
+                                EditorName: [],
+                            };
+                        }
+                        // Gom user theo loại quyền
+                        if (item.AccessType.trim() === "Viewer") {
+                            acc[fileId].ViewerName.push(item.UserName);
+                        } else if (item.AccessType.trim() === "Editor") {
+                            acc[fileId].EditorName.push(item.UserName);
+                        }
+                        return acc;
+                    }, {})
+                );
+                // Gộp các tên lại thành chuỗi để hiển thị
+                const result = grouped.map((f: any) => ({
+                    ...f,
+                    ViewerName: f.ViewerName.join(", "),
+                    EditorName: f.EditorName.join(", "),
                 }));
-
                 setAccessList(result);
-            } else {
+                setRawAccess(raw);
+                console.log('raw', raw)
+                // console.log('res', result)
+            }
+
+            else {
                 console.error('Lấy danh sách ExcelFileAccess thất bại:', res.Message);
             }
         } catch (error) {
@@ -97,51 +108,157 @@ const AccessTypeList: React.FC = () => {
         }
     };
 
-    // useEffect(() => {
-    //     if (!filteredData.length || !accessList.length || !userList.length) return;
-
-    //     const merged = filteredData.map(file => {
-    //         // Lọc các access cho file hiện tại
-    //         const accessesForFile = accessList.filter(a => Number(a.FileId) === file.FileId);
-
-    //         // Lấy danh sách viewers, tìm tên trong userList
-    //         const viewers = accessesForFile
-    //             .filter(a => a.AccessType?.toLowerCase() === 'viewer')
-    //             .map(a => {
-    //                 const user = userList.find(u => u.UserId === a.UserId);
-    //                 return user ? user.TenDangNhap : a.ViewerName;
-    //             })
-    //             .join(', ');
-
-    //         // Lấy danh sách editors, tìm tên trong userList
-    //         const editors = accessesForFile
-    //             .filter(a => a.AccessType?.toLowerCase() === 'editor')
-    //             .map(a => {
-    //                 const user = userList.find(u => u.UserId === a.UserId);
-    //                 return user ? user.TenDangNhap : a.EditorName;
-    //             })
-    //             .join(', ');
-
-    //         return {
-    //             ...file,
-    //             Viewer: viewers,
-    //             Editor: editors,
-    //         };
-    //     });
-
-    //     console.log('combinedData merged', merged);
-    //     setCombinedData(merged);
-    // }, [filteredData, accessList, userList]);
-
-
-
     useEffect(() => {
         onLoadUserList();
-        getExcelList();
         getAccessType();
         const userInfo = getUserInfo()
         setUsername(userInfo?.UserName)
     }, []);
+
+    const handleCloseUpdateModal = () => {
+        resetModal();
+        setIsModalOpen(false);
+    };
+
+    const handleUpdateUser = async () => {
+        try {
+            if (!selectedFileId || !selectedUserId || !permission) {
+                Modal.error({
+                    title: "Thiếu thông tin",
+                    content: "Bạn cần chọn user và quyền trước khi update."
+                });
+                return;
+            }
+
+            const userInfo = getUserInfo();
+            if (!userInfo) {
+                Modal.error({
+                    title: "Lỗi",
+                    content: "Không tìm thấy thông tin người dùng hệ thống."
+                });
+                return;
+            }
+            // Gọi API
+            const res = await apiUtil.auth.queryAsync("ExcelFileAccess_Update", {
+                SysUserId: userInfo.UserId,
+                FileId: selectedFileId,
+                UserId: selectedUserId,
+                AccessType: permission.toLowerCase()   // store yêu cầu viewer/editor
+            });
+            console.log('res update', res)
+            if (res.IsSuccess) {
+                await getAccessType();
+                Modal.success({
+                    title: "Cập nhật thành công",
+                    content: "Quyền truy cập đã được cập nhật."
+                });
+                // Reset modal
+                resetModal();
+                setIsModalOpen(false);
+            } else {
+                Modal.error({
+                    title: "Lỗi cập nhật",
+                    content: res.Message || "Không cập nhật được quyền."
+                });
+            }
+        } catch (err) {
+            console.error("Update error:", err);
+            Modal.error({
+                title: "Lỗi",
+                content: "Có lỗi xảy ra khi gọi API update."
+            });
+        }
+    };
+
+    const handleDeleteUser = async (record: any) => {
+        Modal.confirm({
+            title: 'Delete Confirm',
+            content: `Do you want to delete this user's permission" ?`,
+            okText: 'Delete',
+            okType: 'primary',
+            cancelText: 'Cancel',
+            async onOk() {
+                try {
+                    const res = await apiUtil.auth.queryAsync('ExcelFileAccess_Delete', {
+                        ID: record.ID,
+                    });
+                    if (res.IsSuccess) {
+                        Modal.success({ content: 'Delete Successful !' });
+                        getAccessType();
+                    } else {
+                        Modal.error({ content: res.Message || 'Delete Fail !' });
+                    }
+                } catch (err) {
+                    console.error('Error Delete:', err);
+                    Modal.error({ content: 'Error when Delete!' });
+                }
+            },
+        });
+    };
+    const resetModal = () => {
+        setSelectedID(null);
+        setPermission("");
+        setSelectedFileId(null);
+        setSelectedUserId(null);
+        setSelectOptions([]);
+        setModalType(null);
+    };
+
+    // Click icon Viewer
+    const selectViewerName = async (fileId: number) => {
+        resetModal();
+        setModalType("viewer");
+        setIsModalOpen(true);
+        setSelectedFileId(fileId);
+
+        // Lấy dữ liệu mới nhất từ DB trước khi hiển thị modal
+        await getAccessType();
+
+        // Lọc user từ rawAccess mới
+        const users = rawAccess
+            .filter(x => x.FileId === fileId && x.AccessType.trim() === "Viewer")
+            .map(u => ({
+                value: u.ID,
+                label: u.UserName
+            }));
+
+        setSelectOptions(users);
+        setSelectedID(null);
+        setPermission("Viewer");
+    };
+
+
+    // Click icon Editor
+    const selectEditorName = async (fileId: number) => {
+        resetModal();
+        setModalType("editor");
+        setIsModalOpen(true);
+        setSelectedFileId(fileId);
+
+        await getAccessType();
+
+        const users = rawAccess
+            .filter(x => x.FileId === fileId && x.AccessType.trim() === "Editor")
+            .map(u => ({
+                value: u.ID,
+                label: u.UserName
+            }));
+
+        setSelectOptions(users);
+        setSelectedID(null);
+        setPermission("Editor");
+    };
+
+
+    const handleSelectName = (id: number) => {
+        setSelectedID(id);
+
+        const user = rawAccess.find(x => x.ID === id);
+        if (!user) return;
+
+        setPermission(user.AccessType.trim());
+        setSelectedUserId(user.UserId);
+    };
 
     const columns: ColumnsType<any> = [
         {
@@ -165,7 +282,30 @@ const AccessTypeList: React.FC = () => {
             key: 'ViewerName',
             width: '35%',
             ellipsis: true,
-            render: (text: string) => <a>{text}</a>,
+            render: (text: string, record: any) => (
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        width: '100%'
+                    }}
+                >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {text}
+                    </span>
+
+                    <EllipsisOutlined
+                        style={{
+                            fontSize: 20,
+                            color: '#110e0eff',
+                            cursor: 'pointer',
+                            flexShrink: 0           // giữ icon không bị ép nhỏ 
+                        }}
+                        onClick={() => selectViewerName(record.FileId)}
+                    />
+                </div>
+            ),
         },
         {
             title: 'Editor',
@@ -173,16 +313,79 @@ const AccessTypeList: React.FC = () => {
             key: 'EditorName',
             width: '35%',
             ellipsis: true,
-            render: (text: string) => <a>{text}</a>,
+            render: (text: string, record: any) => (
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        width: '100%'
+                    }}
+                >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {text}
+                    </span>
+
+                    <EllipsisOutlined
+                        style={{
+                            fontSize: 20,
+                            color: '#110e0eff',
+                            cursor: 'pointer',
+                            flexShrink: 0           // giữ icon không bị ép nhỏ 
+                        }}
+                        onClick={() => selectEditorName(record.FileId)}
+                    />
+                </div>
+            ),
         },
     ];
 
     return (
         <>
-            <p>AccessType List</p>
+
+            <Title level={3}>AccessType List</Title>
+            <Modal
+                title={modalType === 'viewer' ? "Update/Delete Viewer" : "Update/Delete Editor"}
+                open={isModalOpen}
+                onCancel={handleCloseUpdateModal}
+                maskClosable={false}
+                footer={[
+                    // Nút Delete
+                    <Button key="delete" danger onClick={handleDeleteUser}>
+                        Delete
+                    </Button>,
+                    // Nút Update
+                    <Button key="update" type="primary" onClick={handleUpdateUser}>
+                        Update
+                    </Button>
+                ]}
+            >
+                <div>
+                    <label><b>Name:</b></label>
+                    <Select
+                        style={{ width: "100%" }}
+                        placeholder="Select Viewer"
+                        value={selectedID}
+                        onChange={handleSelectName}
+                    >
+                        {selectOptions.map(opt => (
+                            <Select.Option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </Select.Option>
+                        ))}
+                    </Select>
+                    <label><b>Permission:</b></label>
+                    <Input
+                        placeholder="Permission"
+                        value={permission}
+                        onChange={(e) => setPermission(e.target.value)}
+                    />
+                </div>
+
+            </Modal>
             <Table
                 columns={columns}
-                dataSource={filteredData}
+                dataSource={accessList}
                 loading={loading}
             />
         </>
