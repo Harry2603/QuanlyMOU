@@ -61,11 +61,17 @@ interface AccessType {
     FileId: number;          // ID file Excel
     UserId: number;          // ID user được phân quyền
     AccessType: string;      // viewer / editor / ...
-    // UserName?: string;     // tên người dùng
     ViewerName: string;   // tên nếu quyền viewer
     EditorName: string; 
 }
-
+interface AccessTypes {
+    ID: number;              // khóa chính
+    FileID: number;          // ID file FileData
+    UserId: number;          // ID user được phân quyền
+    AccessType: string;      // viewer / editor / ...
+    ViewerName: string;   // tên nếu quyền viewer
+    EditorName: string; 
+}
 interface UserInfoType {
     AccessToken: string
     FullName: string

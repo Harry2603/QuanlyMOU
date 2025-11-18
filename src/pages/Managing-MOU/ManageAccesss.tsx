@@ -6,7 +6,7 @@ import { EllipsisOutlined } from '@ant-design/icons';
 
 const AccessType: React.FC = () => {
     const [userList, setUserList] = useState<UserListType[]>([])
-    const [accessList, setAccessList] = useState<AccessType[]>([]);
+    const [accessList, setAccessList] = useState<AccessTypes[]>([]);
     const [rawAccess, setRawAccess] = useState<any[]>([]);
     const [selectedID, setSelectedID] = useState<number | null>(null)
     const [permission, setPermission] = useState<string>("");;
@@ -60,27 +60,27 @@ const AccessType: React.FC = () => {
             }
             // Gọi API, không cần truyền filter gì (nếu cần filter thì thêm param vào {})
             const res = await apiUtil.auth.queryAsync('FileDataAccess_Select', {});
-            // console.log('res excelfileaccess', res);
+            console.log('res fdaaccess', res);
             if (res.IsSuccess) {
                 const raw = res.Result as any[];
                 // Gom nhóm theo FileId
                 const grouped = Object.values(
                     raw.reduce((acc: any, item: any) => {
-                        const fileId = item.FileId;
+                        const fileId = item.FileID;
                         if (!acc[fileId]) {
                             acc[fileId] = {
                                 key: fileId,
-                                FileId: fileId,
-                                Name: item.FileName ?? `File ${fileId}`, // hoặc lấy từ join với ExcelFile_Select
+                                FileID: fileId,
+                                FileName: item.FileName ?? `File ${fileId}`,
                                 ViewerName: [],
                                 EditorName: [],
                             };
                         }
                         // Gom user theo loại quyền
                         if (item.AccessType.trim() === "Viewer") {
-                            acc[fileId].ViewerName.push(item.UserName);
+                            acc[fileId].ViewerName.push(item.ViewerName);
                         } else if (item.AccessType.trim() === "Editor") {
-                            acc[fileId].EditorName.push(item.UserName);
+                            acc[fileId].EditorName.push(item.EditorName);
                         }
                         return acc;
                     }, {})
@@ -98,10 +98,10 @@ const AccessType: React.FC = () => {
             }
 
             else {
-                console.error('Lấy danh sách ExcelFileAccess thất bại:', res.Message);
+                console.error('Lấy danh sách FDA thất bại:', res.Message);
             }
         } catch (error) {
-            console.error('Lỗi khi gọi API ExcelFileAccess_Select:', error);
+            console.error('Lỗi khi gọi API FileDataAccess_Select:', error);
         } finally {
             setLoading(false);
         }
@@ -140,7 +140,7 @@ const AccessType: React.FC = () => {
             // Gọi API
             const res = await apiUtil.auth.queryAsync("FileDataAccess_Update", {
                 SysUserId: userInfo.UserId,
-                FileId: selectedFileId,
+                FileID: selectedFileId,
                 UserId: selectedUserId,
                 AccessType: permission.toLowerCase()   // store yêu cầu viewer/editor
             });
@@ -170,32 +170,32 @@ const AccessType: React.FC = () => {
     };
 
     const handleDeleteUser = async () => {
-            Modal.confirm({
-                title: 'Delete Confirm',
-                content: `Do you want to delete this user's permission" ?`,
-                okText: 'Delete',
-                okType: 'primary',
-                cancelText: 'Cancel',
-                async onOk() {
-                    try {
-                        const res = await apiUtil.auth.queryAsync('FileDataAccess_Delete', {
-                            FileId: selectedFileId,
-                            UserId:selectedUserId,
+        Modal.confirm({
+            title: 'Delete Confirm',
+            content: `Do you want to delete this user's permission" ?`,
+            okText: 'Delete',
+            okType: 'primary',
+            cancelText: 'Cancel',
+            async onOk() {
+                try {
+                    const res = await apiUtil.auth.queryAsync('FileDataAccess_Delete', {
+                        FileID: selectedFileId,
+                        UserId: selectedUserId,
 
-                        });
-                        console.log('id delete', res)
-                        if (res.IsSuccess) {
-                            Modal.success({ content: 'Delete Successful !' });
-                            getAccessType();
-                        } else {
-                            Modal.error({ content: res.Message || 'Delete Fail !' });
-                        }
-                    } catch (err) {
-                        console.error('Error Delete:', err);
-                        Modal.error({ content: 'Error when Delete!' });
+                    });
+                    console.log('id delete', res)
+                    if (res.IsSuccess) {
+                        Modal.success({ content: 'Delete Successful !' });
+                        getAccessType();
+                    } else {
+                        Modal.error({ content: res.Message || 'Delete Fail !' });
                     }
-                },
-            });
+                } catch (err) {
+                    console.error('Error Delete:', err);
+                    Modal.error({ content: 'Error when Delete!' });
+                }
+            },
+        });
     };
     const resetModal = () => {
         setSelectedID(null);
@@ -213,15 +213,12 @@ const AccessType: React.FC = () => {
         setIsModalOpen(true);
         setSelectedFileId(fileId);
 
-        // Lấy dữ liệu mới nhất từ DB trước khi hiển thị modal
-        await getAccessType();
-
         // Lọc user từ rawAccess mới
         const users = rawAccess
-            .filter(x => x.FileId === fileId && x.AccessType.trim() === "Viewer")
+            .filter(x => x.FileID === fileId && x.AccessType.trim() === "Viewer")
             .map(u => ({
                 value: u.ID,
-                label: u.UserName
+                label: u.ViewerName
             }));
 
         setSelectOptions(users);
@@ -237,13 +234,11 @@ const AccessType: React.FC = () => {
         setIsModalOpen(true);
         setSelectedFileId(fileId);
 
-        await getAccessType();
-
         const users = rawAccess
-            .filter(x => x.FileId === fileId && x.AccessType.trim() === "Editor")
+            .filter(x => x.FileID === fileId && x.AccessType.trim() === "Editor")
             .map(u => ({
                 value: u.ID,
-                label: u.UserName
+                label: u.EditorName
             }));
 
         setSelectOptions(users);
@@ -272,8 +267,8 @@ const AccessType: React.FC = () => {
         },
         {
             title: 'File Name',
-            dataIndex: 'Name',
-            key: 'Name',
+            dataIndex: 'FileName',
+            key: 'FileName',
             width: '20%',
             ellipsis: true,
             render: (text: string) => <a>{text}</a>,
@@ -304,7 +299,7 @@ const AccessType: React.FC = () => {
                             cursor: 'pointer',
                             flexShrink: 0           // giữ icon không bị ép nhỏ 
                         }}
-                        onClick={() => selectViewerName(record.FileId)}
+                        onClick={() => selectViewerName(record.FileID)}
                     />
                 </div>
             ),
@@ -335,7 +330,7 @@ const AccessType: React.FC = () => {
                             cursor: 'pointer',
                             flexShrink: 0           // giữ icon không bị ép nhỏ 
                         }}
-                        onClick={() => selectEditorName(record.FileId)}
+                        onClick={() => selectEditorName(record.FileID)}
                     />
                 </div>
             ),
@@ -377,10 +372,21 @@ const AccessType: React.FC = () => {
                         ))}
                     </Select>
                     <label><b>Permission:</b></label>
-                    <Input
+                    <Select
+                        style={{ width: "100%" }}
                         placeholder="Permission"
                         value={permission}
-                        onChange={(e) => setPermission(e.target.value)}
+                        onChange={(value) => setPermission(value)}
+                        options={[
+                            {
+                                value: 'Viewer',
+                                label: 'Viewer',
+                            },
+                            {
+                                value: 'Editor',
+                                label: 'Editor',
+                            },
+                        ]}
                     />
                 </div>
 

@@ -181,7 +181,7 @@ const AppLayout = (): React.JSX.Element => {
                 : []),
 
             ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
-                ? [getItem(<Link to="/Managing-MOU/accesslist">WordEditor</Link>, 'access-list')]
+                ? [getItem(<Link to="/Managing-MOU/accesslist">Access Type List</Link>, 'access-list')]
                 : []),
         ]),
         getItem('ManagingAccount', 'account-group', <SettingOutlined />, [

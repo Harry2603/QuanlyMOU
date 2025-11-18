@@ -191,8 +191,8 @@ const App: React.FC = () => {
         // console.log("object", result);
         setFilteredData(result);
     };
-    const handleOpenModal = (fileId: number) => {
-        setSelectedFileId(fileId);
+    const handleOpenModal = (record:FileDataType) => {
+        setSelectedFileId(record.FileID);
         setIsAddModalOpen(true);
     };
     const handleCloseAddModal = () => {
@@ -202,6 +202,7 @@ const App: React.FC = () => {
         setSelectedPermission('');  // reset quyền
         setSelectedFileId(undefined);
     };
+
     const handleSaveAddUser = async () => {
         // Kiểm tra input
         if (!userSelect) {
@@ -359,7 +360,7 @@ const App: React.FC = () => {
                     </VerticalAlignBottomOutlined>
                     <PlusOutlined
                         style={{ color: 'green' }}
-                        onClick={() => handleOpenModal(record.FileId)}
+                        onClick={() => handleOpenModal(record)}
                     />
                     <DeleteOutlined
                         style={{ color: 'red' }}

@@ -5,7 +5,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import './App.css'
 import { AppLayout, PublicAppLayout } from './components'
 import { useAppState } from './hooks'
-import { DocumentList, Template, DocumentListOfEmployee, LoginPage, ListOfCompany, PersonalFile, WordEditor } from './pages'
+import { DocumentList, Template, DocumentListOfEmployee, LoginPage, ListOfCompany, PersonalFile, WordEditor, AccessType } from './pages'
 import RegisterPage from './pages/login-page/RegisterPage'
 import Home from './pages/Home/Home'
 import Category from './pages/Managing-MOU/Category'
@@ -43,6 +43,7 @@ function App() {
                                     <Route path='documentlistofemployee' element={<DocumentListOfEmployee />} />
                                     <Route path='category' element={<Category />} />
                                     <Route path='wordeditor' element={<WordEditor />} />
+                                    <Route path='accesslist' element={<AccessType />} />
                                 </Route>
 
                                 <Route path='spreadsheet' element={<Outlet />}>

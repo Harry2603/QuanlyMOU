@@ -60,7 +60,7 @@ const AccessTypeList: React.FC = () => {
             }
             // Gọi API, không cần truyền filter gì (nếu cần filter thì thêm param vào {})
             const res = await apiUtil.auth.queryAsync('ExcelFileAccess_Select', {});
-            // console.log('res excelfileaccess', res);
+            console.log('res excelfileaccess', res);
             if (res.IsSuccess) {
                 const raw = res.Result as any[];
                 // Gom nhóm theo FileId

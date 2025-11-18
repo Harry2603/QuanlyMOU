@@ -11,8 +11,9 @@ import WordEditor from './Managing-MOU/WordEditor.tsx';
 import Spreadsheet from './Excel/Spreadsheet.tsx';
 import ExcelList from './Excel/ExcelList.tsx';
 import AccessTypeList from './Excel/ManageAccess.tsx';
+import AccessType from './Managing-MOU/ManageAccesss.tsx';
 import { registerLicense } from '@syncfusion/ej2-base';
 
 registerLicense('ORg4AjUWIQA/Gnt2XFhhQlJHfV5AQmBIYVp/TGpJfl96cVxMZVVBJAtUQF1hTH5Wd0ViW3tZcXVXQ2NcWkZ/');
 
-export { DocumentList,Template,DocumentListOfEmployee,LoginPage, PersonalFile,ListOfCompany,ListOfPostGraduateStudent,TheNumberOfGraduates,ComprehensiveAlumniManagement,WordEditor,Spreadsheet,ExcelList,AccessTypeList };
+export { DocumentList,Template,DocumentListOfEmployee,LoginPage, PersonalFile,ListOfCompany,ListOfPostGraduateStudent,TheNumberOfGraduates,ComprehensiveAlumniManagement,WordEditor,Spreadsheet,ExcelList,AccessTypeList,AccessType };
