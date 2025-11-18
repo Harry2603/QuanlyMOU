@@ -4,7 +4,7 @@ import { Space, Table, Button, Input, Typography, Tag, Modal, Select } from 'ant
 import { apiUtil } from '../../utils';
 import { EllipsisOutlined } from '@ant-design/icons';
 
-const AccessTypeList: React.FC = () => {
+const AccessType: React.FC = () => {
     const [userList, setUserList] = useState<UserListType[]>([])
     const [accessList, setAccessList] = useState<AccessType[]>([]);
     const [rawAccess, setRawAccess] = useState<any[]>([]);
@@ -59,7 +59,7 @@ const AccessTypeList: React.FC = () => {
                 throw new Error('Không tìm thấy thông tin user');
             }
             // Gọi API, không cần truyền filter gì (nếu cần filter thì thêm param vào {})
-            const res = await apiUtil.auth.queryAsync('ExcelFileAccess_Select', {});
+            const res = await apiUtil.auth.queryAsync('FileDataAccess_Select', {});
             // console.log('res excelfileaccess', res);
             if (res.IsSuccess) {
                 const raw = res.Result as any[];
@@ -138,7 +138,7 @@ const AccessTypeList: React.FC = () => {
                 return;
             }
             // Gọi API
-            const res = await apiUtil.auth.queryAsync("ExcelFileAccess_Update", {
+            const res = await apiUtil.auth.queryAsync("FileDataAccess_Update", {
                 SysUserId: userInfo.UserId,
                 FileId: selectedFileId,
                 UserId: selectedUserId,
@@ -178,7 +178,7 @@ const AccessTypeList: React.FC = () => {
                 cancelText: 'Cancel',
                 async onOk() {
                     try {
-                        const res = await apiUtil.auth.queryAsync('ExcelFileAccess_Delete', {
+                        const res = await apiUtil.auth.queryAsync('FileDataAccess_Delete', {
                             FileId: selectedFileId,
                             UserId:selectedUserId,
 
@@ -394,4 +394,4 @@ const AccessTypeList: React.FC = () => {
     )
 };
 
-export default AccessTypeList;
+export default AccessType;

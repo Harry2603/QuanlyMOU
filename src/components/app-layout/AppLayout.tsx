@@ -179,6 +179,10 @@ const AppLayout = (): React.JSX.Element => {
             ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
                 ? [getItem(<Link to="/Managing-MOU/wordeditor">WordEditor</Link>, 'word-editor')]
                 : []),
+
+            ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4
+                ? [getItem(<Link to="/Managing-MOU/accesslist">WordEditor</Link>, 'access-list')]
+                : []),
         ]),
         getItem('ManagingAccount', 'account-group', <SettingOutlined />, [
             ...(roleId === 1 || roleId === 2 || roleId === 4

@@ -261,9 +261,6 @@ const ExcelList: React.FC = () => {
         setUserSelect(value);
         // console.log("Selected:", value); // debug nếu cần
     }
-    const onChange = (value: string) => {
-        // console.log(`selected ${value}`);
-    };
     const columns: ColumnsType<any> = [
         {
             title: 'MOU_Number',
