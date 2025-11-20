@@ -189,9 +189,9 @@ const AppLayout = (): React.JSX.Element => {
                 ? [getItem(<Link to="/ManagingAccount/listofcompany">List of Company</Link>, 'listofcompany', <IdcardOutlined />)]
                 : []),
 
-            ...(roleId === 3
-                ? [getItem(<Link to="/ManagingAccount/Personal-account">Personal File</Link>, 'personalfile')]
-                : []),
+            // ...(roleId === 3
+            //     ? [getItem(<Link to="/ManagingAccount/Personal-account">Personal File</Link>, 'personalfile')]
+            //     : []),
         ]),
         getItem('Spreadsheet', 'spreadsheet', <SettingOutlined />, [
             ...(roleId === 1 || roleId === 2 || roleId === 3 || roleId === 4

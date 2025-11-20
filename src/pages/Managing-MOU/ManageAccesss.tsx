@@ -60,7 +60,7 @@ const AccessType: React.FC = () => {
             }
             // Gọi API, không cần truyền filter gì (nếu cần filter thì thêm param vào {})
             const res = await apiUtil.auth.queryAsync('FileDataAccess_Select', {});
-            console.log('res fdaaccess', res);
+            // console.log('res fdaaccess', res);
             if (res.IsSuccess) {
                 const raw = res.Result as any[];
                 // Gom nhóm theo FileId
@@ -93,7 +93,7 @@ const AccessType: React.FC = () => {
                 }));
                 setAccessList(result);
                 setRawAccess(raw);
-                console.log('raw', raw)
+                // console.log('raw', raw)
                 // console.log('res', result)
             }
 
@@ -144,7 +144,7 @@ const AccessType: React.FC = () => {
                 UserId: selectedUserId,
                 AccessType: permission.toLowerCase()   // store yêu cầu viewer/editor
             });
-            console.log('res update', res)
+            // console.log('res update', res)
             if (res.IsSuccess) {
                 await getAccessType();
                 Modal.success({
@@ -183,10 +183,12 @@ const AccessType: React.FC = () => {
                         UserId: selectedUserId,
 
                     });
-                    console.log('id delete', res)
+                    // console.log('id delete', res)
                     if (res.IsSuccess) {
                         Modal.success({ content: 'Delete Successful !' });
                         getAccessType();
+                        resetModal();
+                        setIsModalOpen(false);
                     } else {
                         Modal.error({ content: res.Message || 'Delete Fail !' });
                     }
@@ -197,6 +199,7 @@ const AccessType: React.FC = () => {
             },
         });
     };
+
     const resetModal = () => {
         setSelectedID(null);
         setPermission("");

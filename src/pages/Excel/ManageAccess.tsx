@@ -60,7 +60,7 @@ const AccessTypeList: React.FC = () => {
             }
             // Gọi API, không cần truyền filter gì (nếu cần filter thì thêm param vào {})
             const res = await apiUtil.auth.queryAsync('ExcelFileAccess_Select', {});
-            console.log('res excelfileaccess', res);
+            // console.log('res excelfileaccess', res);
             if (res.IsSuccess) {
                 const raw = res.Result as any[];
                 // Gom nhóm theo FileId
@@ -93,7 +93,7 @@ const AccessTypeList: React.FC = () => {
                 }));
                 setAccessList(result);
                 setRawAccess(raw);
-                console.log('raw', raw)
+                // console.log('raw', raw)
                 // console.log('res', result)
             }
 
@@ -144,7 +144,7 @@ const AccessTypeList: React.FC = () => {
                 UserId: selectedUserId,
                 AccessType: permission.toLowerCase()   // store yêu cầu viewer/editor
             });
-            console.log('res update', res)
+            // console.log('res update', res)
             if (res.IsSuccess) {
                 await getAccessType();
                 Modal.success({
@@ -183,7 +183,7 @@ const AccessTypeList: React.FC = () => {
                             UserId:selectedUserId,
 
                         });
-                        console.log('id delete', res)
+                        // console.log('id delete', res)
                         if (res.IsSuccess) {
                             Modal.success({ content: 'Delete Successful !' });
                             getAccessType();
@@ -377,10 +377,21 @@ const AccessTypeList: React.FC = () => {
                         ))}
                     </Select>
                     <label><b>Permission:</b></label>
-                    <Input
+                    <Select
+                     style={{ width: "100%" }}
                         placeholder="Permission"
                         value={permission}
-                        onChange={(e) => setPermission(e.target.value)}
+                        onChange={(value) => setPermission(value)}
+                        options={[
+                            {
+                                value: 'Viewer',
+                                label: 'Viewer',
+                            },
+                            {
+                                value: 'Editor',
+                                label: 'Editor',
+                            },
+                        ]}
                     />
                 </div>
 

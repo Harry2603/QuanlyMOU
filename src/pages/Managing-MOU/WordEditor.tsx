@@ -88,7 +88,7 @@ const WordEditor: React.FC = () => {
     if (isDocxUrl(Url)) {
       const docxBlob = await response.blob();
 
-      console.log('Uploading DOCX to Syncfusion server...');
+      // console.log('Uploading DOCX to Syncfusion server...');
 
       const formData = new FormData();
       formData.append('UploadFiles', new File([docxBlob], 'uploaded.docx', {
@@ -103,11 +103,11 @@ const WordEditor: React.FC = () => {
       if (!uploadResponse.ok) throw new Error(`Failed to convert DOCX: ${uploadResponse.statusText}`);
       const result = await uploadResponse.text();
 
-      console.log('SFDT Data received!', result);
+      // console.log('SFDT Data received!', result);
       text = result
     } else {
       text = await response.text();
-      console.log(text);
+      // console.log(text);
     }
 
     if (editorRef.current && editorRef.current.documentEditor) {
@@ -137,26 +137,21 @@ const WordEditor: React.FC = () => {
 
   const handleConfirmSave = async () => {
     setIsLoading(true)
-    console.log("filename author", filename);
-
+    // console.log("filename author", filename);
     const editor = (editorRef.current as any)?.documentEditor;
-
     if (!editor) {
       console.warn("⚠️ DocumentEditor is not ready.");
       setIsLoading(false)
       return;
     }
-
     try {
       const sfdt = editor.serialize();
-      console.log(sfdt);
+      // console.log(sfdt);
       const sfdtBlob = new Blob([sfdt], { type: 'application/json' });
       const file = new File([sfdtBlob], `${filename}.txt`, { type: 'application/json' });
-
       // Goi api upload file lên server
       const resp = await apiUtil.auth.uploadFileAsync(file);
-      console.log("Upload response:", resp);
-
+      // console.log("Upload response:", resp);
       if (resp.IsSuccess) {
         const userInfo = getUserInfo()
         // console.log("xxhhh", userInfo);
@@ -168,14 +163,12 @@ const WordEditor: React.FC = () => {
           AuthorUsername: userInfo?.UserName
         };
         console.log("cvcvcv", data);
-
         // Gọi api insert vào db
         const isInsert = await apiUtil.auth.queryAsync('FileData_Insert', data);
-
         if (isInsert.IsSuccess) {
           setIsLoading(false)
           message.success('Tạo file thành công!');
-          console.log("File inserted successfully");
+          // console.log("File inserted successfully");
           setShowDialog(false);
         } else {
           setIsLoading(false)
@@ -193,7 +186,7 @@ const WordEditor: React.FC = () => {
 
   const handleChange = (value: string) => {
     setUserSelect(value);
-    console.log("Selected:", value); // debug nếu cần
+    // console.log("Selected:", value); // debug nếu cần
   }
 
   return (
