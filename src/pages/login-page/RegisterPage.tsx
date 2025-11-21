@@ -52,11 +52,11 @@ const RegisterPage: React.FC = () => {
                 return;
             }
             const DoanhNghiepID = (doanhResp.Result as any).DoanhNghiepID;
-            console.log("DoanhNghiepID:", DoanhNghiepID);
+            // console.log("DoanhNghiepID:", DoanhNghiepID);
 
             // 2️ Gọi API để mã hóa mật khẩu
             const passwordResp = await apiUtil.user.generatePasswordAsync(Password);
-            console.log("call success", passwordResp.Result);
+            // console.log("call success", passwordResp.Result);
             if (!passwordResp?.IsSuccess || !passwordResp.Result) {
                 message.error(passwordResp?.Message || "Mã hóa mật khẩu thất bại!");
                 setIsBusy(false);
@@ -64,9 +64,9 @@ const RegisterPage: React.FC = () => {
             }
 
             const passHash = passwordResp.Result as any
-            console.log("pass", passHash.PasswordHash);
+            // console.log("pass", passHash.PasswordHash);
             //  Định nghĩa RoleId cho UsepasswordResp.Resultr
-            console.log("user name", Username);
+            // console.log("user name", Username);
 
             //  4️ Gửi request đăng ký tài khoản
             const registerResp = await apiUtil.any.queryAsync("CoreUsers_Insert", {
@@ -77,7 +77,7 @@ const RegisterPage: React.FC = () => {
                 RoleId: 3,
                 DoanhNghiepID: DoanhNghiepID
             });
-            console.log("Dang ky thanh cong", registerResp);
+            // console.log("Dang ky thanh cong", registerResp);
 
             if (!registerResp?.IsSuccess) {
                 message.error(registerResp?.Message || "Đăng ký thất bại!");
@@ -152,7 +152,7 @@ const RegisterPage: React.FC = () => {
                     </Row>
                     <Row gutter={16}>
                         <Col span={12}>
-                            <Form.Item<FieldType> name="TenDN" rules={[{ required: true, message: 'Please input Company Name!' }]}>
+                            <Form.Item<FieldType> name="TenDN" rules={[{ required: true, message: 'Please input Company Name or similar with UserName!' }]}>
                                 <Input placeholder="Enter Company Name" />
                             </Form.Item>
                         </Col>

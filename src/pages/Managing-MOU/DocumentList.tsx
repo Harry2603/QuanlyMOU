@@ -55,7 +55,7 @@ const App: React.FC = () => {
                         key: index + 1
                     }
                 })
-                console.log('data', data)
+                // console.log('data', data)
                 setUserList(data ?? [])
             })
             .catch((error) => {
@@ -241,7 +241,7 @@ const App: React.FC = () => {
                 UserId: selectedUser.UserId,   // người được thêm quyền
                 AccessType: selectedPermission // 'Viewer' hoặc 'Editor'
             };
-            console.log('payload', payload)
+            // console.log('payload', payload)
             // Gọi API
             const res = await apiUtil.auth.queryAsync("FileDataAccess_Insert", payload);
 

@@ -108,7 +108,7 @@ const ListOfCompany: React.FC = () => {
                 // Xóa thành công, cập nhật danh sách
                 setDNList(prevList => prevList.filter(item => item.DoanhNghiepID !== DoanhNghiepID));
                 setIsLoading(false);
-                console.log(`Doanh Nghiep với ID ${DoanhNghiepID} đã bị xóa`);
+                // console.log(`Doanh Nghiep với ID ${DoanhNghiepID} đã bị xóa`);
             } else {
                 console.log(`Xóa Doanh Nghiệp thất bại`);
             }

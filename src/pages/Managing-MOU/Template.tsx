@@ -72,7 +72,7 @@ const Template: React.FC = () => {
 
     // Xóa một Template
     const handleDelete = (record: DataType) => {
-        console.log("recỏdxxxxx", record);
+        // console.log("recỏdxxxxx", record);
         if (record.TemplateID) {
             Modal.confirm({
                 title: "Are you sure you want to delete this MOU?",
@@ -99,7 +99,7 @@ const Template: React.FC = () => {
                 // setTemplateList(prevList => prevList.filter(item => item.TemplateID !== TemplateID));
                 onLoadTemplateList()
                 setIsLoading(false);
-                console.log(`Doanh Nghiep với ID ${TemplateID} đã bị xóa`);
+                // console.log(`Doanh Nghiep với ID ${TemplateID} đã bị xóa`);
             } else {
                 console.log(`Xóa Doanh Nghiệp thất bại`);
             }
@@ -171,7 +171,7 @@ const Template: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log("🔍 Templatelist updated:", Templatelist);
+        // console.log("Templatelist updated:", Templatelist);
         setIsLoading(true);
         Promise.all([
             onLoadTemplateList(), onLoadCategory()
@@ -284,7 +284,7 @@ const Template: React.FC = () => {
         const result = Templatelist.filter(item =>
             item.Description.toLowerCase().includes(keyword)
         );
-        console.log("xxxxxxxxxxxxx", result);
+        // console.log("xxxxxxxxxxxxx", result);
         setTemplateList(result);
     };
 

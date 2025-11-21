@@ -66,7 +66,7 @@ const ManagingMOU: React.FC = () => {
                         }
                     return {...item, trang_thai_text:trang_thai_text}
                 })
-                console.log('ds',handleData);
+                // console.log('ds',handleData);
 
                 setMOUList(handleData)// Cập nhật danh sách MOU vào state
                 setIsLoading(false)// Kết thúc trạng thái loading
@@ -85,7 +85,7 @@ const ManagingMOU: React.FC = () => {
             // Xóa thành công, cập nhật danh sách
             setMOUList(prevList => prevList.filter(item => item.id !== id));
             setIsLoading(false);
-            console.log(`MOU với ID ${id} đã bị xóa`);
+            // console.log(`MOU với ID ${id} đã bị xóa`);
         } else {
             console.log(`Xóa MOU thất bại`);
         }
@@ -103,8 +103,7 @@ const ManagingMOU: React.FC = () => {
 
     const handleEdit = async (record?: DataType) => {
         if (record) {
-            console.log("Dữ liệu record:", record); // Kiểm tra dữ liệu có hay khôngs
-
+            // console.log("Dữ liệu record:", record); // Kiểm tra dữ liệu có hay khôngs
             // Chuyển đổi trạng thái số sang text khi hiển thị trong Form
         let trangThaiText = 'pending'; 
         if (record.trang_thai === 1) trangThaiText = 'in_progress';
@@ -125,9 +124,9 @@ const ManagingMOU: React.FC = () => {
         } else {
             try {
                 const values = await editForm.validateFields();
-                console.log("Giá trị hợp lệ:", values);
+                // console.log("Giá trị hợp lệ:", values);
                 if (!editingRecord) {
-                    console.log("Không có dữ liệu để cập nhật!");
+                    // console.log("Không có dữ liệu để cập nhật!");
                     return;
                 }
     
@@ -145,16 +144,16 @@ const ManagingMOU: React.FC = () => {
                     setFilteredData(prevData =>
                         prevData.map(item => (item.key === editingRecord.key ? updatedData : item))
                     );
-                    console.log("Cập nhật thành công!");
+                    // console.log("Cập nhật thành công!");
                 } else {
-                    console.log("Cập nhật thất bại!");
+                    // console.log("Cập nhật thất bại!");
                 }
     
                 editForm.resetFields();
                 setIsEditModalOpen(false);
             } catch (error) {
                 console.error("Lỗi khi cập nhật:", error);
-                console.log("Cập nhật thất bại!");
+                // console.log("Cập nhật thất bại!");
             }
         }
     };

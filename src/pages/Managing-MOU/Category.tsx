@@ -51,9 +51,9 @@ const Category: React.FC = () => {
                 // Xóa thành công, cập nhật danh sách
                 setCategoryList(prevList => prevList.filter(item => item.Id !== Id));
                 setIsLoading(false);
-                console.log(`Category với ID ${Id} đã bị xóa`);
+                // console.log(`Category với ID ${Id} đã bị xóa`);
             } else {
-                console.log(`Xóa Category thất bại`);
+                // console.log(`Xóa Category thất bại`);
             }
         }).catch(error => {
             console.error('Lỗi khi xóa Category:', error);

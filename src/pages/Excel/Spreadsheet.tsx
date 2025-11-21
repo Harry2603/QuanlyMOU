@@ -9,15 +9,15 @@ const Spreadsheet: React.FC = () => {
   const [userList, setUserList] = useState<UserListType[]>([])
   const [userSelect, setUserSelect] = useState<string>()
   const [fileName, setFilename] = useState('');
-  
+
   const showModal = () => setIsModalOpen(true);
   const handleCancel = () => setIsModalOpen(false);
 
   const handleChange = (value: string) => {
     setUserSelect(value);
-    console.log("Selected:", value); // debug nếu cần
+    // console.log("Selected:", value); // debug nếu cần
   }
-  
+
   const onLoadUserList = async () => {
     await apiUtil.auth.queryAsync<UserListType[]>('CoreUser_Select')
       .then(resp => {
@@ -50,44 +50,36 @@ const Spreadsheet: React.FC = () => {
   const handleOk = async () => {
     const spreadsheet = spreadsheetRef.current;
     if (!spreadsheet) return;
-
     // spreadsheet.endEdit?.();
-
     spreadsheet.beforeSave = (args) => {
       args.needBlobData = true;
-      args.isFullPost = true; // 🔥 Quan trọng
+      args.isFullPost = true; //Quan trọng
     };
-
     spreadsheet.endEdit?.();
     spreadsheet.notify('beforeSave', {}); // Ghi lại trạng thái merge
     spreadsheet.refresh();                // Cập nhật layout
     spreadsheet.saveComplete = saveComplete;
     spreadsheet.save();
-
   };
 
   const saveComplete = async (args: any) => {
-    console.log('Save complete event triggered:', args);
-    console.log('Blob data type:', args.blobData?.type);
+    // console.log('Save complete event triggered:', args);
+    // console.log('Blob data type:', args.blobData?.type);
     const blobData = args.blobData;
     if (!blobData) {
       message.error("Không lấy được file Blob Excel!");
       return;
     }
-
     const file = new File([blobData], `${fileName}.xlsx`, {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    console.log("Blob file Excel:", file);
-
+    })
+    // console.log("Blob file Excel:", file);
     // Upload file lên server
     const uploadResp = await apiUtil.auth.uploadFileAsync(file);
     if (!uploadResp.IsSuccess) {
       message.error("Upload file thất bại!");
       return;
     }
-
     const userInfo = getUserInfo();
     const data = {
       Name: fileName,
@@ -96,7 +88,6 @@ const Spreadsheet: React.FC = () => {
       Username: userSelect,
       AuthorUsername: userInfo?.UserName,
     };
-
     const isInsert = await apiUtil.auth.queryAsync("ExcelFile_Insert", data);
     if (isInsert.IsSuccess) {
       message.success("Lưu file Excel thành công!");
@@ -105,7 +96,6 @@ const Spreadsheet: React.FC = () => {
       message.error("Lưu DB thất bại!");
     }
   };
-
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);

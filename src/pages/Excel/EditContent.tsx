@@ -39,7 +39,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
         if (!spreadsheet) return;
 
         try {
-            console.log("Gọi API với FileId =", fileID);
+            // console.log("Gọi API với FileId =", fileID);
 
             const isSelectDetail = await apiUtil.auth.queryAsync("ExcelFile_Select_ById", { FileId: fileID });
             if (!isSelectDetail.IsSuccess) {
@@ -69,7 +69,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
                 spreadsheet.saveComplete = (args) => {
                     clearTimeout(timeout);
                     if (args.blobData) {
-                        console.log("Nhận blobData Excel thành công:", args.blobData);
+                        // console.log("Nhận blobData Excel thành công:", args.blobData);
                         resolve(args.blobData);
                     } else {
                         reject(new Error("Không nhận được blobData"));
@@ -137,7 +137,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
                 spreadsheet.saveComplete = (args) => {
                     clearTimeout(timeout);
                     if (args.blobData) {
-                        console.log("✅ Nhận blobData Excel khi tạo mới:", args.blobData);
+                        // console.log("Nhận blobData Excel khi tạo mới:", args.blobData);
                         resolve(args.blobData);
                     } else {
                         reject(new Error("Không nhận được blobData"));
@@ -196,7 +196,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
 
             const response = await fetch(Url);
             const contentType = response.headers.get("content-type") || "";
-            console.log("Response content-type:", contentType);
+            // console.log("Response content-type:", contentType);
 
             if (!response.ok) {
                 Modal.error({ content: "Không thể tải file." });
@@ -226,14 +226,14 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
                     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 });
                 spreadsheet.open({ file });
-                console.log("Đã mở file Excel thành công:", Url);
+                // console.log("Đã mở file Excel thành công:", Url);
             } else {
                 // JSON thật (ví dụ exportFromJson)
                 const text = await blob.text();
                 try {
                     const json = JSON.parse(text);
                     spreadsheet.openFromJson({ file: json });
-                    console.log("Đã mở file JSON thành công:", Url);
+                    // console.log("Đã mở file JSON thành công:", Url);
                 } catch (e) {
                     console.error("File không phải JSON hợp lệ:", e);
                     Modal.error({ content: "Định dạng file không hợp lệ hoặc bị lỗi." });
@@ -246,7 +246,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
     };
 
     const handleEnd = async () => {
-        console.log("file xxx", fileDataSelect);
+        // console.log("file xxx", fileDataSelect);
         const isBothEnd = !fileDataSelect?.Status_Side ? false : true
 
         const data = {

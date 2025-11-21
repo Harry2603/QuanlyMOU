@@ -162,7 +162,7 @@ const WordEditor: React.FC = () => {
           Username: userSelect,
           AuthorUsername: userInfo?.UserName
         };
-        console.log("cvcvcv", data);
+        // console.log("cvcvcv", data);
         // Gọi api insert vào db
         const isInsert = await apiUtil.auth.queryAsync('FileData_Insert', data);
         if (isInsert.IsSuccess) {

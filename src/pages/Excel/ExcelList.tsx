@@ -80,7 +80,7 @@ const ExcelList: React.FC = () => {
             fetchData()
 
         }).catch(error => {
-            console.log("Fail to update file status", error);
+            // console.log("Fail to update file status", error);
             Modal.error({ content: 'Fail to sign!' })
         })
     }
@@ -96,7 +96,7 @@ const ExcelList: React.FC = () => {
             fetchData()
 
         }).catch(error => {
-            console.log("Fail to update file status", error);
+            // console.log("Fail to update file status", error);
             Modal.error({ content: 'Fail to sign!' })
         })
     }
@@ -130,9 +130,9 @@ const ExcelList: React.FC = () => {
         try {
             const response = await fetch(fullUrl);
             if (!response.ok) throw new Error('Không tìm thấy file trên server.');
-            console.log('Content-Type:', response.headers.get('content-type'));
+            // console.log('Content-Type:', response.headers.get('content-type'));
             const blob = await response.blob();
-            console.log('Blob type:', blob.type, 'size:', blob.size);
+            // console.log('Blob type:', blob.type, 'size:', blob.size);
             // Tạo link ẩn để trigger download
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -219,7 +219,7 @@ const ExcelList: React.FC = () => {
                 UserId: selectedUser.UserId,   // người được thêm quyền
                 AccessType: selectedPermission // 'Viewer' hoặc 'Editor'
             };
-            console.log('payload', payload)
+            // console.log('payload', payload)
             // Gọi API
             const res = await apiUtil.auth.queryAsync("ExcelFileAccess_Insert", payload);
 
@@ -249,7 +249,7 @@ const ExcelList: React.FC = () => {
                         key: index + 1
                     }
                 })
-                console.log('data', data)
+                // console.log('data', data)
                 setUserList(data ?? [])
             })
             .catch((error) => {

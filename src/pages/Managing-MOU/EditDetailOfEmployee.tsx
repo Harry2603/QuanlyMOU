@@ -44,7 +44,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
 
     const handleSave = async () => {
         const sfdt = editorRef.current?.documentEditor.serialize();
-        console.log("Document content:", sfdt);
+        // console.log("Document content:", sfdt);
 
         if (!sfdt) return;
 
@@ -73,7 +73,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             const file = new File([blob], filename, { type: blob.type });
 
             const uploadResp = await apiUtil.auth.uploadFileAsync(file);
-            console.log("xxxxxxxxx", detail);
+            // console.log("xxxxxxxxx", detail);
             if (uploadResp.IsSuccess) {
                 const data = {
                     FileID: detail[0].FileID,
@@ -127,7 +127,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
     }
 
     const handleEnd = async () => {
-        console.log("file xxx", fileDataSelect);
+        // console.log("file xxx", fileDataSelect);
         const isBothEnd = !fileDataSelect?.Status_Side ? false : true
 
         const data = {
@@ -141,7 +141,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             onClose()
 
         }).catch(error => {
-            console.log("Fail to update file status", error);
+            // console.log("Fail to update file status", error);
             Modal.error({ content: 'Fail to end!' })
         })
     }
@@ -152,7 +152,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                 setIsFullyOpen(true)
                 setTimeout(async () => {
                     // fetchData()
-                    console.log("url xxxxxx", Url);
+                    // console.log("url xxxxxx", Url);
                     const decodedSFDT = decodeBase64(Url ?? '')
                     const response = await fetch(decodedSFDT);
 
