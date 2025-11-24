@@ -24,11 +24,13 @@ interface EditDetailProps {
     isHideEnd?: boolean;
     isCreate?: boolean;
     isModalOpen: boolean;
+    isFileAdmin: boolean;
     Url: string | null;
     fileID: number | undefined
     fileDataSelect: FileDataType | null | any
     onClose: () => void;
     onFetch: () => void
+    userAccess: "Viewer" | "Editor";
 }
 interface ExcelFileType {
     FileId: number,
@@ -50,11 +52,16 @@ interface DetailProps {
     isHideEnd?: boolean;
     isCreate?: boolean;
     isModalOpen: boolean;
+    isFileAdmin: boolean;
     Url: string | null;
     fileID: number | undefined
     fileDataSelect: ExcelFileType | null | any
     onClose: () => void;
     onFetch: () => void
+    userAccess: "Viewer" | "Editor";
+}
+interface AccessTypeResponse {
+    AccessType: "Viewer" | "Editor";
 }
 interface AccessType {
     ID: number;              // khóa chính
@@ -62,7 +69,7 @@ interface AccessType {
     UserId: number;          // ID user được phân quyền
     AccessType: string;      // viewer / editor / ...
     ViewerName: string;   // tên nếu quyền viewer
-    EditorName: string; 
+    EditorName: string;
 }
 interface AccessTypes {
     ID: number;              // khóa chính
@@ -70,7 +77,7 @@ interface AccessTypes {
     UserId: number;          // ID user được phân quyền
     AccessType: string;      // viewer / editor / ...
     ViewerName: string;   // tên nếu quyền viewer
-    EditorName: string; 
+    EditorName: string;
 }
 interface UserInfoType {
     AccessToken: string

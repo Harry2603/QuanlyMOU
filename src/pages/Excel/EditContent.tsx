@@ -6,7 +6,7 @@ import { apiUtil } from '../../utils';
 import realtimeService from '../../services/realtimeService';
 
 
-const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID, onFetch, fileDataSelect, isHideEnd, isCreate }) => {
+const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID, onFetch, fileDataSelect, isHideEnd, isCreate, userAccess,isFileAdmin }) => {
     const spreadsheetRef = useRef<SpreadsheetComponent>(null)
     const [isFullyOpen, setIsFullyOpen] = useState(false)
     const [username, setUsername] = useState<string>()
@@ -279,7 +279,13 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
             setUsername(userInfo?.UserName)
         }
     }, [isModalOpen])
-
+    // console.log("DEBUG nút disable", {
+    //     isLocked,
+    //     Status_BothSide: fileDataSelect?.Status_BothSide,
+    //     userAccess,
+    //     NguoiCapNhat: fileDataSelect?.NguoiCapNhat,
+    //     username
+    // });
     return (
         <Modal
             title="Edit MOU"
@@ -312,10 +318,10 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
 
             <div style={{ marginTop: '10px', textAlign: 'right' }}>
                 <Space>{
-                    isHideEnd === false ? null : (<Button disabled={isLocked||fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button>)
+                    isHideEnd === false ? null : (<Button disabled={isLocked || fileDataSelect?.Status_BothSide || (!isFileAdmin && userAccess === "Viewer") || (!isFileAdmin && fileDataSelect?.NguoiCapNhat === username) || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button>)
                 }
-                    {isCreate === true ? (<Button disabled={isLocked||fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleCreate}>Create</Button>) :
-                        (<Button disabled={isLocked||fileDataSelect?.Status_BothSide || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleSave}>Save</Button>)}
+                    {isCreate === true ? (<Button disabled={isLocked || fileDataSelect?.Status_BothSide || (!isFileAdmin && userAccess === "Viewer") || (!isFileAdmin && fileDataSelect?.NguoiCapNhat === username) || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleCreate}>Create</Button>) :
+                        (<Button disabled={isLocked || fileDataSelect?.Status_BothSide || (!isFileAdmin && userAccess === "Viewer") || (!isFileAdmin && fileDataSelect?.NguoiCapNhat === username) || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleSave}>Save</Button>)}
                 </Space>
             </div>
 

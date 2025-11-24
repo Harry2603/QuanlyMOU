@@ -24,11 +24,12 @@ const ExcelList: React.FC = () => {
     const [userList, setUserList] = useState<UserListType[]>([])
     const [userSelect, setUserSelect] = useState<string>()
     const [selectedPermission, setSelectedPermission] = useState<string>('');
+    const [userAccess, setUserAccess] = useState<"Viewer" | "Editor">("Viewer");
 
 
     const getUserInfo = (): UserInfoType | null => {
         const userInfoString = localStorage.getItem('userInfo');
-        // console.log('userinfotype',userInfoString)
+        // console.log('userinfotype', userInfoString)
         try {
             if (userInfoString) {
                 return JSON.parse(userInfoString);
@@ -40,10 +41,57 @@ const ExcelList: React.FC = () => {
         }
     }
 
-    const handleEdit = (record: ExcelFileType) => {
+    const onLoadUserList = async () => {
+        await apiUtil.auth.queryAsync<UserListType[]>('CoreUser_Select')
+            .then(resp => {
+                const data = resp.Result?.map((item, index) => {
+                    return {
+                        ...item,
+                        label: item.TenDangNhap,
+                        value: item.TenDangNhap,
+                        key: index + 1
+                    }
+                })
+                // console.log('data', data)
+                setUserList(data ?? [])
+            })
+            .catch((error) => {
+                console.error("Error loading doanh nghiep list:", error);
+            });
+    };
+
+    const handleEdit = async (record: ExcelFileType) => {
         setEditUrl(record.FullUrl);
         setSelectedFileId(record.FileId);
-        setFileDataSelect(record)
+        setFileDataSelect(record);
+
+        const currentUser = getUserInfo();
+        if (!currentUser?.UserName) {
+            console.error("Không tìm thấy username!");
+            return;
+        }
+
+        // Xác định có phải quản trị viên chính của file không
+        const isFileAdmin =
+            record.UsernameAuthor === currentUser.UserName ||
+            record.UsernamePartner === currentUser.UserName;
+        // nếu bạn xài UsernameAuthor/UsernamePartner thì đổi cho đúng field
+
+        // Nếu là admin file -> luôn Editor, không cần check ExcelFileAccess
+        if (isFileAdmin) {
+            // console.log("User là admin của file, set quyền Editor mặc định");
+            setUserAccess("Editor");
+        } else {
+            // User thường -> check bảng ExcelFileAccess
+            const user = userList.find(u => u.TenDangNhap === currentUser.UserName);
+            if (!user) {
+                console.error("Không tìm thấy UserId trong danh sách user!");
+                setUserAccess("Viewer");
+            } else {
+                await getUserAccess(user.UserId, record.FileId);
+            }
+        }
+
         setIsModalOpen(true);
     };
 
@@ -65,6 +113,36 @@ const ExcelList: React.FC = () => {
             }
         } catch (err) {
             console.error("Error fetching file list:", err);
+        }
+    };
+    const getUserAccess = async (userId: number, fileId: number) => {
+        // console.log("UserId gửi API:", userId, "FileId gửi API:", fileId);
+
+        if (!userId || !fileId) {
+            console.error("Thiếu UserId hoặc FileId");
+            setUserAccess("Viewer");
+            return;
+        }
+
+        const resp = await apiUtil.auth.queryAsync(
+            "ExcelFileAccess_Select_ByAccessType",
+            {
+                FileId: fileId,
+                UserId: userId
+            }
+        );
+
+        // console.log(">>> resp từ ExcelFileAccess_Select:", resp);
+
+        const rows = resp.Result as { AccessType: string }[] | null;
+
+        if (resp.IsSuccess && rows && rows.length > 0 && rows[0].AccessType) {
+            const access = rows[0].AccessType.trim();   //QUAN TRỌNG
+            // console.log("AccessType sau khi trim:", access);
+
+            setUserAccess(access === "Editor" ? "Editor" : "Viewer");
+        } else {
+            setUserAccess("Viewer");
         }
     };
 
@@ -126,6 +204,27 @@ const ExcelList: React.FC = () => {
             },
         });
     };
+    const isAdminOfFile = (record: ExcelFileType) => {
+        return record.UsernameAuthor === username ||
+            record.UsernamePartner === username;
+    };
+
+    const handleDeleteClick = (record: ExcelFileType) => {
+        const isAdminOfFile =
+            record.UsernameAuthor === username ||
+            record.UsernamePartner === username;
+
+        if (userAccess === "Viewer" && !isAdminOfFile) {
+            Modal.warning({
+                content: "Bạn không được cấp quyền cho tính năng Delete",
+            });
+            return;
+        }
+
+        // nếu có quyền → gọi hàm xóa thật
+        handleDelete(record);
+    };
+
     const loadAndDownload = async (fullUrl: string, fileName: string) => {
         try {
             const response = await fetch(fullUrl);
@@ -181,6 +280,21 @@ const ExcelList: React.FC = () => {
         setSelectedPermission('');  // reset quyền
         setSelectedFileId(undefined);
     };
+    const handleAddAccessClick = (record: ExcelFileType) => {
+        const isAdminOfFile =
+            record.UsernameAuthor === username ||
+            record.UsernamePartner === username;
+
+        if (userAccess === "Viewer" && !isAdminOfFile) {
+            Modal.warning({
+                content: "Bạn không được cấp quyền cho tính năng Add Access",
+            });
+            return;
+        }
+
+        handleOpenModal(record.FileId);
+    };
+
     const handleSaveAddUser = async () => {
         // Kiểm tra input
         if (!userSelect) {
@@ -238,25 +352,6 @@ const ExcelList: React.FC = () => {
         }
     };
 
-    const onLoadUserList = async () => {
-        await apiUtil.auth.queryAsync<UserListType[]>('CoreUser_Select')
-            .then(resp => {
-                const data = resp.Result?.map((item, index) => {
-                    return {
-                        ...item,
-                        label: item.TenDangNhap,
-                        value: item.TenDangNhap,
-                        key: index + 1
-                    }
-                })
-                // console.log('data', data)
-                setUserList(data ?? [])
-            })
-            .catch((error) => {
-                console.error("Error loading doanh nghiep list:", error);
-            });
-    };
-
     const handleChange = (value: string) => {
         setUserSelect(value);
         // console.log("Selected:", value); // debug nếu cần
@@ -286,7 +381,7 @@ const ExcelList: React.FC = () => {
             ellipsis: true,
             render: (_: any, record: any) => {
                 if (!record.Status_Side) {
-                    return <Tag color="yellow">Writing</Tag>;
+                    return <Tag color="gray">Writing</Tag>;
                 } else if (record.Status_Side && !record.Status_BothSide) {
                     return <Tag color="yellow">One side finished</Tag>;
                 } else if (record.Status_BothSide && !(record.Status_SignatureA || record.Status_SignatureB)) {
@@ -356,16 +451,22 @@ const ExcelList: React.FC = () => {
                     <VerticalAlignBottomOutlined
                         style={{ color: 'purple' }}
                         onClick={() => loadAndDownload(record.FullUrl, record.Name)}
-                    // className="px-4 py-2 bg-green-600 text-white rounded"
                     >
                     </VerticalAlignBottomOutlined>
                     <PlusOutlined
-                        style={{ color: 'green' }}
-                        onClick={() => handleOpenModal(record.FileId)}
+                        style={{
+                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? '#ccc' : 'green',
+                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={() => handleAddAccessClick(record)}
                     />
+
                     <DeleteOutlined
-                        style={{ color: 'red' }}
-                        onClick={() => handleDelete(record)}
+                        style={{
+                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? 'gray' : 'red',
+                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer',
+                        }}
+                        onClick={() => handleDeleteClick(record)}
                     />
                 </Space>
             ),
@@ -437,6 +538,11 @@ const ExcelList: React.FC = () => {
                     fileDataSelect={fileDataSelect ?? null}
                     onFetch={() => fetchData()}
                     onClose={() => setIsModalOpen(false)}
+                    userAccess={userAccess}
+                    isFileAdmin={
+                        fileDataSelect?.UsernameAuthor === username ||
+                        fileDataSelect?.UsernamePartner === username
+                    }
                 />
 
                 <div style={{ display: 'none' }}>

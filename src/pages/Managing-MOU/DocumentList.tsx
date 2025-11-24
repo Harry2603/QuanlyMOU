@@ -31,6 +31,7 @@ const App: React.FC = () => {
     const [userSelect, setUserSelect] = useState<string>()
     const [selectedPermission, setSelectedPermission] = useState<string>('');
     const [userList, setUserList] = useState<UserListType[]>([])
+    const [userAccess, setUserAccess] = useState<"Viewer" | "Editor">("Viewer");
 
     const getUserInfo = (): UserInfoType | null => {
         const userInfoString = localStorage.getItem('userInfo');
@@ -81,11 +82,69 @@ const App: React.FC = () => {
         }
     }
 
-    const handleEdit = (record: FileDataType) => {
+    const handleEdit = async (record: FileDataType) => {
         setEditUrl(record.FullUrl);
         setSelectedFileId(record.FileID);
-        setFileDataSelect(record)
+        setFileDataSelect(record);
+
+        const currentUser = getUserInfo();
+        if (!currentUser?.UserName) {
+            console.error("Không tìm thấy username!");
+            return;
+        }
+
+        // Xác định có phải quản trị viên chính của file không
+        const isFileAdmin =
+            record.UsernameAuthor === currentUser.UserName ||
+            record.UsernamePartner === currentUser.UserName;
+        // nếu bạn xài UsernameAuthor/UsernamePartner thì đổi cho đúng field
+
+        // Nếu là admin file -> luôn Editor, không cần check ExcelFileAccess
+        if (isFileAdmin) {
+            // console.log("User là admin của file, set quyền Editor mặc định");
+            setUserAccess("Editor");
+        } else {
+            // User thường -> check bảng ExcelFileAccess
+            const user = userList.find(u => u.TenDangNhap === currentUser.UserName);
+            if (!user) {
+                console.error("Không tìm thấy UserId trong danh sách user!");
+                setUserAccess("Viewer");
+            } else {
+                await getUserAccess(user.UserId, record.FileID);
+            }
+        }
+
         setIsModalOpen(true);
+    };
+    const getUserAccess = async (userId: number, fileId: number) => {
+        // console.log("UserId gửi API:", userId, "FileId gửi API:", fileId);
+
+        if (!userId || !fileId) {
+            console.error("Thiếu UserId hoặc FileId");
+            setUserAccess("Viewer");
+            return;
+        }
+
+        const resp = await apiUtil.auth.queryAsync(
+            "FileDataAccess_Select_ByAccessType",
+            {
+                FileID: fileId,
+                UserId: userId
+            }
+        );
+
+        // console.log(">>> resp từ ExcelFileAccess_Select:", resp);
+
+        const rows = resp.Result as { AccessType: string }[] | null;
+
+        if (resp.IsSuccess && rows && rows.length > 0 && rows[0].AccessType) {
+            const access = rows[0].AccessType.trim();   //QUAN TRỌNG
+            // console.log("AccessType sau khi trim:", access);
+
+            setUserAccess(access === "Editor" ? "Editor" : "Viewer");
+        } else {
+            setUserAccess("Viewer");
+        }
     };
 
     const fetchData = async () => {
@@ -144,6 +203,39 @@ const App: React.FC = () => {
             Modal.error({ content: 'Fail to sign!' })
         })
     }
+    const handleAddAccessClick = (record: FileDataType) => {
+        const isAdminOfFile =
+            record.UsernameAuthor === username ||
+            record.UsernamePartner === username;
+
+        if (userAccess === "Viewer" && !isAdminOfFile) {
+            Modal.warning({
+                content: "Bạn không được cấp quyền cho tính năng Add Access",
+            });
+            return;
+        }
+
+        handleOpenModal(record.FileID);
+    };
+    const isAdminOfFile = (record: FileDataType) => {
+        return record.UsernameAuthor === username ||
+            record.UsernamePartner === username;
+    };
+    const handleDeleteClick = (record: FileDataType) => {
+        const isAdminOfFile =
+            record.UsernameAuthor === username ||
+            record.UsernamePartner === username;
+
+        if (userAccess === "Viewer" && !isAdminOfFile) {
+            Modal.warning({
+                content: "Bạn không được cấp quyền cho tính năng Delete",
+            });
+            return;
+        }
+
+        // nếu có quyền → gọi hàm xóa thật
+        handleDelete(record);
+    };
     const handleDelete = async (record: any) => {
         Modal.confirm({
             title: 'Delete Confirm',
@@ -191,8 +283,8 @@ const App: React.FC = () => {
         // console.log("object", result);
         setFilteredData(result);
     };
-    const handleOpenModal = (record:FileDataType) => {
-        setSelectedFileId(record.FileID);
+    const handleOpenModal = (fileId: number) => {
+        setSelectedFileId(fileId);
         setIsAddModalOpen(true);
     };
     const handleCloseAddModal = () => {
@@ -354,17 +446,24 @@ const App: React.FC = () => {
                 <Space size="middle">
                     <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
                     <VerticalAlignBottomOutlined
-                        style={{ color: 'red' }}
+                        style={{ color: 'purple' }}
                         onClick={() => loadAndDownload('Docx', record.FullUrl)}
                         className="px-4 py-2 bg-green-600 text-white rounded">
                     </VerticalAlignBottomOutlined>
                     <PlusOutlined
-                        style={{ color: 'green' }}
-                        onClick={() => handleOpenModal(record)}
+                        style={{
+                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? '#ccc' : 'green',
+                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={() => handleAddAccessClick(record)}
                     />
+
                     <DeleteOutlined
-                        style={{ color: 'red' }}
-                        onClick={() => handleDelete(record)}
+                        style={{
+                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? 'gray' : 'red',
+                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer',
+                        }}
+                        onClick={() => handleDeleteClick(record)}
                     />
                 </Space>
             ),
@@ -434,6 +533,11 @@ const App: React.FC = () => {
                     fileDataSelect={fileDataSelect ?? null}
                     onFetch={() => fetchData()}
                     onClose={() => setIsModalOpen(false)}
+                    userAccess={userAccess}
+                    isFileAdmin={
+                        fileDataSelect?.UsernameAuthor === username ||
+                        fileDataSelect?.UsernamePartner === username
+                    }
                 />
 
                 <div style={{ display: 'none' }}>
