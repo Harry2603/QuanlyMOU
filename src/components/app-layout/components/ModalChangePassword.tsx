@@ -1,6 +1,7 @@
 import { App, Form, FormProps, Input } from 'antd'
 import React, { useState } from 'react'
 import { StandardForm, StandardModal } from '../..'
+import { apiUtil } from '../../../utils'
 // import { userService } from '../../../services'
 // import { UserChangePasswordParamType } from '../../../services/userService'
 
@@ -11,26 +12,44 @@ const ModalChangePassword: React.FC<PropType> = ({ isShow, setIsShow }) => {
 
     const [isBusy, setIsBusy] = useState(false)
 
+    // const onSave: FormProps<FieldType>['onFinish'] = async formData => {
+    //     setIsBusy(true);
+
+    //     const param = {
+    //         CurrentPassword: formData.CurrentPassword,
+    //         NewPassword: formData.NewPassword,
+    //     };
+
+    //     try {
+    //         const resp = await apiUtil.changePasswordAsync(param);
+
+    //         if (!resp.IsSuccess) {
+    //             message.error(resp.Message || 'Đổi mật khẩu thất bại!');
+    //             return;
+    //         }
+
+    //         message.success('Đổi mật khẩu thành công!');
+    //         setIsShow(false);
+    //     } catch (err) {
+    //         message.error('Lỗi kết nối máy chủ!');
+    //     } finally {
+    //         setIsBusy(false);
+    //     }
+    // };
     const onSave: FormProps<FieldType>['onFinish'] = formData => {
-        // console.log(formData)
-        message.info('Under development')
         setIsBusy(true)
-        setTimeout(() => {
-            setIsBusy(false)
-        }, 1000)
-        // setIsBusy(true)
-        // const param: UserChangePasswordParamType = {
-        //     CurrentPassword: formData.CurrentPassword,
-        //     NewPassword: formData.NewPassword,
-        // }
-        // userService
-        //     .changePasswordAsync(param)
-        //     .then(resp => {
-        //         if (!resp.IsSuccess) return
-        //         message.success('Thành công')
-        //         setIsShow(false)
-        //     })
-        //     .finally(() => setIsBusy(false))
+        const { CurrentPassword, NewPassword } = formData
+        apiUtil.user
+            .changePasswordAsync(CurrentPassword, NewPassword)
+            .then(resp => {
+                if (!resp.IsSuccess) return
+                const result = resp.Result
+                if (result === null) return
+                localStorage.setItem('userInfo', JSON.stringify(result))
+            })
+            .finally(() => {
+                setIsBusy(false)
+            })
     }
 
     return (
