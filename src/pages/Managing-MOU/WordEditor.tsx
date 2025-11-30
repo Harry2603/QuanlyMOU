@@ -55,13 +55,13 @@ const WordEditor: React.FC = () => {
         setUserList(data ?? [])
       })
       .catch((error) => {
-        console.error("Error loading doanh nghiep list:", error);
+        console.error("Error loading company list:", error);
       });
   };
 
   const fetchData = async (Url:string) => {
     if (!Url) {
-      Modal.error({ content: "URL không hợp lệ." });
+      Modal.error({ content: "Invalid URL." });
       return;
     }
 
@@ -240,7 +240,7 @@ const WordEditor: React.FC = () => {
         height="100%"
         serviceUrl="https://ej2services.syncfusion.com/production/web-services/api/documenteditor/"
         enableToolbar={true}
-        enableTrackChanges={true}
+        // enableTrackChanges={true}
         ref={editorRef}
       >
         <Inject services={[Toolbar]} />

@@ -318,7 +318,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
 
             <div style={{ marginTop: '10px', textAlign: 'right' }}>
                 <Space>{
-                    isHideEnd === false ? null : (<Button disabled={isLocked || fileDataSelect?.Status_BothSide || (!isFileAdmin && userAccess === "Viewer") || (!isFileAdmin && fileDataSelect?.NguoiCapNhat === username) || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button>)
+                    isHideEnd === false ? null : (<Button disabled={isLocked || fileDataSelect?.Status_BothSide || (!isFileAdmin && userAccess === "Viewer") || (!isFileAdmin && userAccess === "Editor") || (!isFileAdmin && fileDataSelect?.NguoiCapNhat === username) || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleEnd}>End</Button>)
                 }
                     {isCreate === true ? (<Button disabled={isLocked || fileDataSelect?.Status_BothSide || (!isFileAdmin && userAccess === "Viewer") || (!isFileAdmin && fileDataSelect?.NguoiCapNhat === username) || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleCreate}>Create</Button>) :
                         (<Button disabled={isLocked || fileDataSelect?.Status_BothSide || (!isFileAdmin && userAccess === "Viewer") || (!isFileAdmin && fileDataSelect?.NguoiCapNhat === username) || fileDataSelect?.NguoiCapNhat === username} type="primary" onClick={handleSave}>Save</Button>)}

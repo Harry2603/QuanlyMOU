@@ -75,7 +75,7 @@ const LoginPage = (): React.JSX.Element => {
             <div className='form'>
                 <div className='logo'>
                     {/* <img alt='logo' src='/assets/imgs/logo.svg' /> */}
-                    <span className='text-gradient'>Đăng Nhập</span>
+                    <span className='text-gradient'>LOGIN</span>
                 </div>
                 <StandardForm form={form} onFinish={onFinish}>
                     <Form.Item<FieldType>
@@ -104,7 +104,7 @@ const LoginPage = (): React.JSX.Element => {
                     </Form.Item>
                 </StandardForm>
                 <Button type='primary' htmlType='submit' loading={isBusy} onClick={() => form.submit()}>
-                    Đăng nhập
+                    LOGIN
                 </Button>
             </div>
         </div>

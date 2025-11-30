@@ -32,7 +32,7 @@ const Spreadsheet: React.FC = () => {
         setUserList(data ?? [])
       })
       .catch((error) => {
-        console.error("Error loading doanh nghiep list:", error);
+        console.error("Error loading company list:", error);
       });
   };
   const getUserInfo = (): UserInfoType | null => {
@@ -67,7 +67,7 @@ const Spreadsheet: React.FC = () => {
     // console.log('Blob data type:', args.blobData?.type);
     const blobData = args.blobData;
     if (!blobData) {
-      message.error("Không lấy được file Blob Excel!");
+      message.error("Failed to get Excel Blob file!");
       return;
     }
     const file = new File([blobData], `${fileName}.xlsx`, {
@@ -77,7 +77,7 @@ const Spreadsheet: React.FC = () => {
     // Upload file lên server
     const uploadResp = await apiUtil.auth.uploadFileAsync(file);
     if (!uploadResp.IsSuccess) {
-      message.error("Upload file thất bại!");
+      message.error("File upload failed!");
       return;
     }
     const userInfo = getUserInfo();
@@ -90,10 +90,10 @@ const Spreadsheet: React.FC = () => {
     };
     const isInsert = await apiUtil.auth.queryAsync("ExcelFile_Insert", data);
     if (isInsert.IsSuccess) {
-      message.success("Lưu file Excel thành công!");
+      message.success("Excel file saved successfully!");
       setIsModalOpen(false);
     } else {
-      message.error("Lưu DB thất bại!");
+      message.error("Failed to save to the database!");
     }
   };
 

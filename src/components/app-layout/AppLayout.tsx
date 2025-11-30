@@ -148,7 +148,7 @@ const AppLayout = (): React.JSX.Element => {
 
     const onLogout = useCallback(() => {
         confirmModal({
-            content: 'bạn có muốn đăng xuất không?',
+            content: 'Do you want to Log out!',
             onOk: () => {
                 localStorage.clear()
                 setIsLogin(false)
@@ -273,7 +273,7 @@ const AppLayout = (): React.JSX.Element => {
                                 <span>{username}</span>
                                 <Button icon={<KeyOutlined />} onClick={() => setIsShowModalChangePassword(true)} />
                                 <Button type='primary' icon={<LogoutOutlined />} onClick={onLogout}>
-                                    Đăng xuất
+                                    Log Out
                                 </Button>
                             </Space>
                         </div>

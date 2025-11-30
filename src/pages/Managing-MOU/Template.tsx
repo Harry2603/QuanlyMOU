@@ -238,7 +238,7 @@ const Template: React.FC = () => {
             [keyName]: resp.Result?.FileName || null,
         }));
 
-        // ✅ Lưu file tạm và mở modal chọn category
+        // Lưu file tạm và mở modal chọn category
         setPendingUploadData(resp);
         setIsCategoryModalOpen(true);
         onLoadCategory(); // gọi API để load category

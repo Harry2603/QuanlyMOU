@@ -87,6 +87,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                     onClose(); // đóng modal sau khi lưu
                     const userNhan = [1, 3, 5]
                     await realtimeService.sendAsync(JSON.stringify(userNhan))
+                    console.log('userNhan',userNhan)
                 } else {
                     Modal.error({ content: 'Lỗi khi lưu dữ liệu vào database.' });
                 }
@@ -236,13 +237,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
             setUsername(userInfo?.UserName)
         }
     }, [isModalOpen])
-    console.log("DEBUG nút disable", {
-        isLocked,
-        Status_BothSide: fileDataSelect?.Status_BothSide,
-        userAccess,
-        NguoiCapNhat: fileDataSelect?.NguoiCapNhat,
-        username
-    });
+
     return (
         <Modal
             title="Edit MOU"

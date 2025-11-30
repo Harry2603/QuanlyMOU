@@ -56,7 +56,7 @@ const ExcelList: React.FC = () => {
                 setUserList(data ?? [])
             })
             .catch((error) => {
-                console.error("Error loading doanh nghiep list:", error);
+                console.error("Error loading business list:", error);
             });
     };
 
@@ -67,7 +67,7 @@ const ExcelList: React.FC = () => {
 
         const currentUser = getUserInfo();
         if (!currentUser?.UserName) {
-            console.error("Không tìm thấy username!");
+            console.error("Username not found!");
             return;
         }
 
@@ -85,7 +85,7 @@ const ExcelList: React.FC = () => {
             // User thường -> check bảng ExcelFileAccess
             const user = userList.find(u => u.TenDangNhap === currentUser.UserName);
             if (!user) {
-                console.error("Không tìm thấy UserId trong danh sách user!");
+                console.error("UserId not found in the user list!");
                 setUserAccess("Viewer");
             } else {
                 await getUserAccess(user.UserId, record.FileId);
@@ -119,7 +119,7 @@ const ExcelList: React.FC = () => {
         // console.log("UserId gửi API:", userId, "FileId gửi API:", fileId);
 
         if (!userId || !fileId) {
-            console.error("Thiếu UserId hoặc FileId");
+            console.error("Missing UserId or FileId");
             setUserAccess("Viewer");
             return;
         }
@@ -216,7 +216,7 @@ const ExcelList: React.FC = () => {
 
         if (userAccess === "Viewer" && !isAdminOfFile) {
             Modal.warning({
-                content: "Bạn không được cấp quyền cho tính năng Delete",
+                content: "You do not have permission for the Delete feature",
             });
             return;
         }
@@ -228,7 +228,7 @@ const ExcelList: React.FC = () => {
     const loadAndDownload = async (fullUrl: string, fileName: string) => {
         try {
             const response = await fetch(fullUrl);
-            if (!response.ok) throw new Error('Không tìm thấy file trên server.');
+            if (!response.ok) throw new Error('File not found on the server.');
             // console.log('Content-Type:', response.headers.get('content-type'));
             const blob = await response.blob();
             // console.log('Blob type:', blob.type, 'size:', blob.size);
@@ -244,7 +244,7 @@ const ExcelList: React.FC = () => {
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (error) {
-            console.error('Lỗi tải file:', error);
+            console.error('File download error:', error);
         }
     };
 
@@ -287,7 +287,7 @@ const ExcelList: React.FC = () => {
 
         if (userAccess === "Viewer" && !isAdminOfFile) {
             Modal.warning({
-                content: "Bạn không được cấp quyền cho tính năng Add Access",
+                content: "You are not granted permission for the Add Access feature",
             });
             return;
         }
@@ -298,15 +298,15 @@ const ExcelList: React.FC = () => {
     const handleSaveAddUser = async () => {
         // Kiểm tra input
         if (!userSelect) {
-            Modal.warning({ content: "Vui lòng chọn tài khoản!" });
+            Modal.warning({ content: "Please select an account!" });
             return;
         }
         if (!selectedPermission) {
-            Modal.warning({ content: "Vui lòng chọn quyền truy cập!" });
+            Modal.warning({ content: "Please select access!" });
             return;
         }
         if (!selectedFileId) {
-            Modal.error({ content: "Không xác định được file cần thêm quyền!" });
+            Modal.error({ content: "Unable to determine the file that needs additional permissions!" });
             return;
         }
 
@@ -314,7 +314,7 @@ const ExcelList: React.FC = () => {
         const currentUser = getUserInfo();
         // console.log("currentUser:", currentUser);
         if (!currentUser?.RoleId) {
-            Modal.error({ content: "Không tìm thấy thông tin người dùng hiện tại!" });
+            Modal.error({ content: "Current user information not found!" });
             return;
         }
 
@@ -322,7 +322,7 @@ const ExcelList: React.FC = () => {
             // Gọi API để lấy thông tin người được chọn (để có UserId)
             const selectedUser = userList.find(u => u.TenDangNhap === userSelect);
             if (!selectedUser) {
-                Modal.error({ content: "Không tìm thấy người dùng được chọn!" });
+                Modal.error({ content: "Selected user not found!" });
                 return;
             }
 
@@ -339,16 +339,16 @@ const ExcelList: React.FC = () => {
 
             // Kiểm tra kết quả
             if (res.IsSuccess) {
-                Modal.success({ content: "Thêm quyền truy cập thành công!" });
+                Modal.success({ content: "Access granted successfully!" });
                 setIsAddModalOpen(false);
                 setUserSelect('');
                 setSelectedPermission('');
             } else {
-                Modal.error({ content: res.Message || "Không thể thêm quyền truy cập!" });
+                Modal.error({ content: res.Message || "Cannot add access!" });
             }
         } catch (error) {
             console.error("Error adding user:", error);
-            Modal.error({ content: "Có lỗi xảy ra khi thêm quyền truy cập!" });
+            Modal.error({ content: "An error occurred while adding access!" });
         }
     };
 
@@ -493,7 +493,7 @@ const ExcelList: React.FC = () => {
                     loading={loading} />
 
                 <Modal
-                    title="Thêm người dùng vào file"
+                    title="Add User"
                     open={isAddModalOpen}
                     onCancel={handleCloseAddModal}
                     onOk={handleSaveAddUser}
