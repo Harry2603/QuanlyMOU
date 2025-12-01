@@ -9,13 +9,12 @@ import {
   Selection,
 } from '@syncfusion/ej2-react-documenteditor';
 import './WordEditor.css';
-import { Button, Modal, Select, message } from 'antd';
+import { Button, Modal, Select, message,Input } from 'antd';
 import type { ConfigProviderProps } from 'antd';
-import { DownloadOutlined } from '@ant-design/icons';
 import { apiUtil } from '../../utils';
 
 DocumentEditorContainerComponent.Inject(Toolbar)
-DocumentEditor.Inject(WordExport, SfdtExport,Selection)
+DocumentEditor.Inject(WordExport, SfdtExport, Selection)
 type SizeType = ConfigProviderProps['componentSize'];
 
 const WordEditor: React.FC = () => {
@@ -59,7 +58,7 @@ const WordEditor: React.FC = () => {
       });
   };
 
-  const fetchData = async (Url:string) => {
+  const fetchData = async (Url: string) => {
     if (!Url) {
       Modal.error({ content: "Invalid URL." });
       return;
@@ -120,7 +119,7 @@ const WordEditor: React.FC = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const templateUrl = queryParams.get('templateUrl');
-    if(templateUrl){
+    if (templateUrl) {
       fetchData(templateUrl)
     }
     const userInfo = getUserInfo()
@@ -128,12 +127,12 @@ const WordEditor: React.FC = () => {
     onLoadUserList()
   }, [])
 
-  const onDownload = () => {
-    const editor = (editorRef.current as any)?.documentEditor;
-    if (editor) {
-      editor.save('sample', 'Docx'); // Tải file xuống
-    }
-  };
+  // const onDownload = () => {
+  //   const editor = (editorRef.current as any)?.documentEditor;
+  //   if (editor) {
+  //     editor.save('sample', 'Docx'); // Tải file xuống
+  //   }
+  // };
 
   const handleConfirmSave = async () => {
     setIsLoading(true)
@@ -190,51 +189,36 @@ const WordEditor: React.FC = () => {
   }
 
   return (
-    <div style={{ height: '100vh' }}>
+    <div style={{ height: "100vh", width: "100%", position: "relative" }}>
       <Button
-        className="ml-2"
         type="primary"
-        shape="round"
-        size="middle"
+        style={{ marginBottom: 12 }}
         onClick={() => setShowDialog(true)}>
-        Save</Button>
-      <Button
-        type="primary"
-        shape="round" icon={<DownloadOutlined />}
-        size="middle"
-        onClick={onDownload}>
-        Download</Button>
-      <div />
+        Save
+      </Button>
       <Modal
-        title={<span className="text-lg font-semibold">Save New MOU</span>}
+        title="Save New Document"
         open={showDialog}
         onOk={handleConfirmSave}
         onCancel={() => setShowDialog(false)}
         confirmLoading={isLoading}>
-        <div className="p-4 space-y-6">
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">File Name:</label>
-            <input
-              type="text"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filename}
-              onChange={(e) => setFilename(e.target.value)}
-            />
-          </div>
-          {/* roleID === 1, tức la admin, sẽ có quyền chọn đối tác */}
-          {roleId === 1 || roleId === 3 || roleId === 4 || roleId === 2 ? (
-            <>
-              <label className="block text-sm font-medium text-gray-700">Account name:</label>
-              <Select
-                onChange={handleChange}
-                style={{ width: "100%" }}
-                options={userList}
-                placeholder="Select a account"
-              />
-            </>
-          ) : null}
+        <div style={{ marginBottom: 12 }}>
+          <label>File Name</label>
+          <Input
+            placeholder="Enter file name"
+            value={filename}
+            onChange={(e) => setFilename(e.target.value)} />
         </div>
-      </Modal>
+        <div>
+          <label>Account Name</label>
+          <Select
+            onChange={handleChange}
+            style={{ width: "100%" }}
+            options={userList}
+            placeholder="Select a account"
+          />
+        </div>
+      </Modal >
       <DocumentEditorContainerComponent
         id="container"
         height="100%"
@@ -245,7 +229,7 @@ const WordEditor: React.FC = () => {
       >
         <Inject services={[Toolbar]} />
       </DocumentEditorContainerComponent>
-    </div>
+    </div >
   );
 };
 

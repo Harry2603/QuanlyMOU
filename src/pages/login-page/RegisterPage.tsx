@@ -11,7 +11,7 @@ const RegisterPage: React.FC = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem("access_token"); // Kiểm tra quyền admin
 
-    // ✅ Kiểm tra quyền Admin
+    //Kiểm tra quyền Admin
     useEffect(() => {
     }, [token, navigate]);
     useEffect(() => {

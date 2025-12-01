@@ -26,7 +26,7 @@ interface UploadResult {
 
 const Template: React.FC = () => {
 
-    const [filteredData, setFilteredData] = useState<DataType[]>([]);
+    // const [filteredData, setFilteredData] = useState<DataType[]>([]);
     const [Templatelist, setTemplateList] = useState<DataType[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [dataSource, setDataSource] = useState<any[]>([]);
@@ -177,49 +177,6 @@ const Template: React.FC = () => {
             onLoadTemplateList(), onLoadCategory()
         ]).then(() => setIsLoading(false));
     }, []);
-
-    // const handleFileUpload = async (keyUrl: string, keyName: string, keyFullUrl: string, resp: UploadResult) => {
-    //     if (!resp.IsSuccess || !resp.Result) {
-    //         message.error("Upload thất bại, không thể insert.");
-    //         return;
-    //     }
-    //     form.setFieldsValue({
-    //         [keyUrl]: resp.Result?.Url,
-    //         [keyName]: resp.Result?.FileName || null,
-    //         [keyFullUrl]: resp.Result?.FullUrl || null,
-    //     })
-    //     setDescription(prev => ({
-    //         ...prev,
-    //         [keyName]: resp.Result?.FileName || null,
-    //     }));
-
-    //     // Sau khi upload thành công và gán form xong => gọi insert luôn
-    //     if (resp.IsSuccess) {
-    //         try {
-    //             const newTemplate: DataType = {
-    //                 Description: resp.Result?.FileName,
-    //                 FullUrl: resp.Result?.FullUrl,
-    //                 Url: resp.Result?.Url,
-    //             };
-
-    //             console.log("newTemplate xxxxx", newTemplate);
-
-    //             const response = await apiUtil.auth.queryAsync('Template_Insert', newTemplate);
-
-    //             if (response.IsSuccess) {
-    //                 message.success("Upload và thêm template thành công");
-    //                 setTemplateList(prev => [...prev, newTemplate]);
-    //                 await onLoadTemplateList();
-    //             } else {
-    //                 message.error(response.Message || "Insert thất bại");
-    //             }
-    //         } catch (err) {
-    //             console.error("Lỗi khi upload và insert:", err);
-    //         }
-    //     } else {
-    //         console.log("Upload file that bai");
-    //     }
-    // }
 
     const handleFileUpload = async (keyUrl: string, keyName: string, keyFullUrl: string, resp: UploadResult) => {
         if (!resp.IsSuccess || !resp.Result) {
