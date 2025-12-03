@@ -26,7 +26,7 @@ interface UploadResult {
 
 const Template: React.FC = () => {
 
-    // const [filteredData, setFilteredData] = useState<DataType[]>([]);
+    const [filteredData, setFilteredData] = useState<DataType[]>([]);
     const [Templatelist, setTemplateList] = useState<DataType[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [dataSource, setDataSource] = useState<any[]>([]);
@@ -133,26 +133,37 @@ const Template: React.FC = () => {
     };
 
     const onLoadTemplateList = () => {
+        setIsLoading(true);
 
-        setIsLoading(true)
         apiUtil.any.queryAsync<DataType[]>('Template_Select').then(resp => {
-            if (resp.IsSuccess) {
-                console.log("API Response:", resp);
-                if (resp.Result === null) return
-                setTemplateList(resp.Result.map((item, index) => {
-                    return {
-                        ...item,
-                        key: index + 1
-                    }
-                }))// Cập nhật danh sách CSV vào state
+            if (resp.IsSuccess && resp.Result) {
+                const data = resp.Result.map((item, index) => ({
+                    ...item,
+                    key: index + 1
+                }));
 
-                setIsLoading(false)// Kết thúc trạng thái loading
-                // console.log('res.Result', resp.Result)
-            } else {
-                console.log('load linh vuc fail')
+                setTemplateList(data);     // lưu data gốc
+                setFilteredData(data);     // hiển thị ban đầu giống nhau
             }
-        })
-    }
+
+            setIsLoading(false);
+        });
+    };
+
+    const onSearch = (value: string) => {
+        const keyword = value.trim().toLowerCase();
+
+        if (!keyword) {
+            setFilteredData(Templatelist);
+            return;
+        }
+        const result = Templatelist.filter(item =>
+            item.Description.toLowerCase().includes(keyword)
+        );
+
+        setFilteredData(result);
+    };
+
 
     const onLoadCategory = () => {
         setIsLoading(true);
@@ -233,18 +244,6 @@ const Template: React.FC = () => {
         onLoadCategory(); // gọi API để load category
     };
 
-
-
-    // Hàm Search
-    const onSearch = (value: string) => {
-        const keyword = value.toLowerCase();
-        const result = Templatelist.filter(item =>
-            item.Description.toLowerCase().includes(keyword)
-        );
-        // console.log("xxxxxxxxxxxxx", result);
-        setTemplateList(result);
-    };
-
     // Cột Table
     const columns: TableColumnsType<DataType> = [
         {
@@ -276,8 +275,8 @@ const Template: React.FC = () => {
             render: (text: string) => text || 'Unknown',
             ellipsis: true,
         },
-        
-        
+
+
         {
             title: 'Action',
             key: 'action',
@@ -287,7 +286,7 @@ const Template: React.FC = () => {
                         style={{ color: 'blue', cursor: 'pointer' }}
                         onClick={() => {
                             if (!userInfo) {
-                                message.info('Hãy đăng nhập để xem nội dung');
+                                message.info('Login for watching file !');
                                 return;
                             }
                             handleEdit(record);
@@ -307,7 +306,7 @@ const Template: React.FC = () => {
     ];
     return (
         <div>
-            <Title level={3}>List of Template MOU</Title>
+            <Title level={3}>List of Template For Contract</Title>
             <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
                 <Search
                     placeholder="Search description"
@@ -315,6 +314,7 @@ const Template: React.FC = () => {
                     enterButton="Search"
                     size="large"
                     onSearch={onSearch}
+                    onChange={(e) => onSearch(e.target.value)} // clear = reset luôn
                     style={{ width: 300 }}
                 />
 
@@ -365,7 +365,7 @@ const Template: React.FC = () => {
             </div>
             <Table<DataType>
                 columns={columns}
-                dataSource={Templatelist}
+                dataSource={filteredData}
                 loading={isLoading}
             // rowKey={(record) => record.TemplateID.toString()} // Sử dụng TemplateID làm rowKey
             />

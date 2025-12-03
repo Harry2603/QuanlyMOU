@@ -110,6 +110,7 @@ const ExcelList: React.FC = () => {
                     canApproveB: item.Status_SignatureB === 0 && item.PartnerID === myUsername,
                 }));
                 setDataSource(result);
+                setFilteredData(result);
             }
         } catch (err) {
             console.error("Error fetching file list:", err);
@@ -258,14 +259,24 @@ const ExcelList: React.FC = () => {
     // Hàm Search
     const onSearch = (value: string) => {
         setSearchText(value);
-        const keyword = value.toLowerCase();
-        const result = dataSource.filter(item =>
-            (item.Name?.toLowerCase() ?? '').includes(keyword) ||
-            (item.NguoiTao?.toLowerCase() ?? '').includes(keyword)
+
+        const keyword = value.trim().toLowerCase();
+        if (!keyword) {
+            // ô search trống → trả lại full list
+            setFilteredData(dataSource);
+            return;
+        }
+
+        setFilteredData(
+            dataSource.filter(item => {
+                const name = (item.Name || '').toString().toLowerCase();
+                const author = (item.NguoiTao || '').toString().toLowerCase();
+
+                return name.includes(keyword) || author.includes(keyword);
+            })
         );
-        // console.log("object", result);
-        setFilteredData(result);
     };
+
     // Hàm khi bấm nút Add
     const handleOpenModal = (fileId: number) => {
         setSelectedFileId(fileId);
@@ -358,7 +369,7 @@ const ExcelList: React.FC = () => {
     }
     const columns: ColumnsType<any> = [
         {
-            title: 'MOU_Number',
+            title: 'Excel_Number',
             key: 'index',
             width: '15%',
             ellipsis: true,
@@ -476,7 +487,7 @@ const ExcelList: React.FC = () => {
     return (
         <>
             <div>
-                <Title level={3}>List Of Document</Title>
+                <Title level={3}>List Of Excel File</Title>
                 <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
                     <Search
                         placeholder="Search description"
@@ -484,6 +495,7 @@ const ExcelList: React.FC = () => {
                         enterButton="Search"
                         size="large"
                         onSearch={onSearch}
+                        onChange={(e) => onSearch(e.target.value)}
                         style={{ width: 300 }}
                     />
                 </div>

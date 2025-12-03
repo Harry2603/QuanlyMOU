@@ -139,7 +139,7 @@ const WordEditor: React.FC = () => {
     // console.log("filename author", filename);
     const editor = (editorRef.current as any)?.documentEditor;
     if (!editor) {
-      console.warn("⚠️ DocumentEditor is not ready.");
+      console.warn("DocumentEditor is not ready.");
       setIsLoading(false)
       return;
     }

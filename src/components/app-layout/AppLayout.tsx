@@ -156,7 +156,7 @@ const AppLayout = (): React.JSX.Element => {
 
     const items: MenuItem[] = [
         getItem('ManagingAccount', 'account-group', <UserOutlined />, [
-            ...( roleId === 3
+            ...( roleId === 3 || roleId === 1
                 ? [getItem(<Link to="/ManagingAccount/personalaccount">Personal Account</Link>, 'personal_account', <IdcardOutlined />)]
                 : []),
         ]),

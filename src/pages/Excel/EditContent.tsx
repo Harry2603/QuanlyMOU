@@ -103,7 +103,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
 
             const updateResp = await apiUtil.auth.queryAsync("ExcelFile_Update", data);
             if (updateResp.IsSuccess) {
-                Modal.success({ content: "Tài liệu đã được lưu thành công!" });
+                Modal.success({ content: "Save Successfull !" });
                 onFetch();
                 onClose();
             } else {
@@ -288,7 +288,7 @@ const EditContent: React.FC<DetailProps> = ({ isModalOpen, Url, onClose, fileID,
     // });
     return (
         <Modal
-            title="Edit MOU"
+            title="Edit Spreadsheet File"
             open={isModalOpen}
             onOk={handleOk}
             onCancel={handleCancel}

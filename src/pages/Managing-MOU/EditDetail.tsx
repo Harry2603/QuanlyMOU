@@ -82,7 +82,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                 const insertResp = await apiUtil.auth.queryAsync('FileData_Update', data);
 
                 if (insertResp.IsSuccess) {
-                    Modal.success({ content: 'Tài liệu đã được lưu thành công!' });
+                    Modal.success({ content: 'Save Successfull !' });
                     onFetch()
                     onClose(); // đóng modal sau khi lưu
                     const userNhan = [1, 3, 5]

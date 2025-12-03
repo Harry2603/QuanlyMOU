@@ -165,6 +165,7 @@ const App: React.FC = () => {
                     canApproveB: item.Status_SignatureB === 0 && item.PartnerID === myUsername,
                 }));
                 setDataSource(result);
+                setFilteredData(result);
             }
         } catch (err) {
             console.error("Error fetching file list:", err);
@@ -273,16 +274,20 @@ const App: React.FC = () => {
 
     const onSearch = (value: string) => {
         setSearchText(value);
-        const keyword = value.toLowerCase();
-        const result = dataSource.filter(item =>
-            // item.FileName.toLowerCase().includes(keyword) ||
-            // item.NguoiTao.toLowerCase().includes(keyword)
-            (item.FileName?.toLowerCase() ?? '').includes(keyword) ||
-            (item.NguoiTao?.toLowerCase() ?? '').includes(keyword)
+
+        const keyword = value.toLowerCase().trim();
+        if (!keyword) return setFilteredData(dataSource);
+
+        setFilteredData(
+            dataSource.filter(item => {
+                const fileName = (item.FileName || '').toString().toLowerCase();
+                const author = (item.NguoiTao || '').toString().toLowerCase();
+                return fileName.includes(keyword) || author.includes(keyword);
+            })
         );
-        // console.log("object", result);
-        setFilteredData(result);
     };
+
+
     const handleOpenModal = (fileId: number) => {
         setSelectedFileId(fileId);
         setIsAddModalOpen(true);
@@ -369,7 +374,10 @@ const App: React.FC = () => {
             key: 'FileName',
             width: '30%',
             ellipsis: true,
-            render: (text: string) => <a>{text}</a>,
+            render: (text: string) => {
+                const displayName = text?.replace(/\.txt$/i, '');
+                return <a>{displayName}</a>;
+            }
         },
 
         {
@@ -481,6 +489,8 @@ const App: React.FC = () => {
                         enterButton="Search"
                         size="large"
                         onSearch={onSearch}
+                        value={searchText}
+                        onChange={(e) => onSearch(e.target.value)}
                         style={{ width: 300 }}
                     />
                 </div>
