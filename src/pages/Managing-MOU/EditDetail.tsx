@@ -85,9 +85,22 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                     Modal.success({ content: 'Save Successfull !' });
                     onFetch()
                     onClose(); // đóng modal sau khi lưu
-                    const userNhan = [1, 3, 5]
-                    await realtimeService.sendAsync(JSON.stringify(userNhan))
-                    console.log('userNhan',userNhan)
+                    // const userNhan = [1, 3, 5]
+                    // await realtimeService.sendAsync(JSON.stringify(userNhan))
+                    // console.log('userNhan',userNhan)
+
+                    // THÊM ĐOẠN NÀY – GỬI THÔNG BÁO REALTIME
+                    if (fileID && username) {
+                        const payload = {
+                            Action: 'Save',
+                            FileID: detail[0].FileID,   // hoặc fileID cũng được
+                            FileName: detail[0].FileName,
+                            UserName: username,
+                            Time: new Date().toISOString(),
+                        }
+                        console.log('>>> SEND REALTIME', payload);
+                        await realtimeService.sendAsync(fileID, JSON.stringify(payload))
+                    }
                 } else {
                     Modal.error({ content: 'Lỗi khi lưu dữ liệu vào database.' });
                 }

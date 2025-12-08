@@ -31,42 +31,93 @@ const stopAsync = async () => {
     await connection.stop()
 }
 
-const groupName: string = 'realtime'
+// const groupName: string = 'realtime'
+const getGroupName = (fileId: number) => `file:${fileId}`
 
-const sendAsync = async (data: string) => {
+const sendAsync = async (fileId: number, data: string) => {
     await handleMessage("Send", {
-        GroupName: groupName,
+        GroupName: getGroupName(fileId),
         Data: data
     })
 }
 
-const joinAsync = async () => {
+const joinAsync = async (fileId: number) => {
+    if (connection.state !== signalR.HubConnectionState.Connected) {
+        console.log("WAITING FOR CONNECTION BEFORE JOIN...");
+        await new Promise(res => setTimeout(res, 200));
+    }
     await handleMessage('Join', {
-        GroupName: groupName
+        GroupName: getGroupName(fileId)
     })
 }
 
-const leaveAsync = () => {
+const leaveAsync = (fileId: number) => {
     handleMessage('Leave', {
-        GroupName: groupName
+        GroupName: getGroupName(fileId)
     })
 }
 
 const onMessage = (callback: (data: { Data: string }) => void) => {
     connection.on('OnMessage', callback)
 }
-
 const handleMessage = async (method: string, param?: unknown) => {
-    if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        if (param === undefined) {
-            await connection.invoke(method)
-            return
+    // 1. log xem connection đã tạo chưa
+    console.log(
+        `%c[SignalR] CALL ${method}`,
+        "color: #00aaff; font-weight: bold",
+        {
+            state: connection?.state,
+            param
         }
-        await connection.invoke(method, param)
-    } else {
-        //
+    );
+
+    // 2. nếu connection không tồn tại
+    if (!connection) {
+        console.warn("[SignalR] ❌ connection is NULL when calling", method);
+        return;
     }
-}
+
+    // 3. nếu connection chưa Connected
+    if (connection.state !== signalR.HubConnectionState.Connected) {
+        console.warn(
+            `[SignalR] ❌ NOT CONNECTED when calling ${method}. state =`,
+            connection.state
+        );
+        return;
+    }
+
+    // 4. invoke lên server
+    try {
+        if (param === undefined) {
+            await connection.invoke(method);
+        } else {
+            await connection.invoke(method, param);
+        }
+
+        console.log(
+            `%c[SignalR] ✔ invoke SUCCESS ${method}`,
+            "color: #28a745; font-weight: bold"
+        );
+    } catch (error) {
+        console.error(
+            `%c[SignalR] ❌ invoke ERROR in ${method}`,
+            "color: red; font-weight: bold",
+            error
+        );
+    }
+};
+
+// const handleMessage = async (method: string, param?: unknown) => {
+//     if (connection && connection.state === signalR.HubConnectionState.Connected) {
+//         if (param === undefined) {
+//             await connection.invoke(method)
+//             return
+//         }
+//         await connection.invoke(method, param)
+//     } else {
+//         //
+//     }
+// }
 
 const realtimeService = {
     startAsync,

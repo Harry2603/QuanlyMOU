@@ -4,6 +4,15 @@ interface CategoryType {
     Description: string
 
 }
+type NotificationItem = {
+    id: string;
+    fileId: number;
+    fileName: string;
+    fromUser: string;
+    time: string;
+    action: string;
+    isRead: boolean;
+};
 interface FileDataType {
     FileID: number,
     FileName: string,

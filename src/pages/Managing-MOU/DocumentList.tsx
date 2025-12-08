@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Space, Table, Button, Input, Typography, Tag, Modal, Select } from 'antd';
-
-import { DeleteOutlined, EditOutlined, PlusOutlined, VerticalAlignBottomOutlined } from '@ant-design/icons';
+import { Space, Table, Button, Input, Typography, Tag, Modal, Select, Badge } from 'antd';
+import realtimeService from '../../services/realtimeService'
+import { BellOutlined, DeleteOutlined, EditOutlined, PlusOutlined, VerticalAlignBottomOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiUtil } from '../../utils';
 import EditDetail from './EditDetail';
@@ -32,6 +32,9 @@ const App: React.FC = () => {
     const [selectedPermission, setSelectedPermission] = useState<string>('');
     const [userList, setUserList] = useState<UserListType[]>([])
     const [userAccess, setUserAccess] = useState<"Viewer" | "Editor">("Viewer");
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [isNotiOpen, setIsNotiOpen] = useState(false);
+    const notiOpenRef = useRef(false);
 
     const getUserInfo = (): UserInfoType | null => {
         const userInfoString = localStorage.getItem('userInfo');
@@ -166,6 +169,11 @@ const App: React.FC = () => {
                 }));
                 setDataSource(result);
                 setFilteredData(result);
+                for (const row of result) {
+                    if (row.FileID) {
+                        realtimeService.joinAsync(row.FileID);
+                    }
+                }
             }
         } catch (err) {
             console.error("Error fetching file list:", err);
@@ -262,16 +270,61 @@ const App: React.FC = () => {
             },
         });
     };
-
     useEffect(() => {
-        fetchData();
-        onLoadUserList();
-        const userInfo = getUserInfo()
-        setUsername(userInfo?.UserName)
-    }, []);
+        notiOpenRef.current = isNotiOpen;
+    }, [isNotiOpen]);
+    useEffect(() => {
+        const handler = (msg: { Data: string }) => {
+            console.log('[APP] RAW MESSAGE >>>', msg)
+            try {
+                const payload = JSON.parse(msg.Data);
+                console.log('[APP] PARSED PAYLOAD >>>', payload)
+
+                const newItem: NotificationItem = {
+                    id: `${payload.FileID}-${payload.Time}-${Math.random()}`,
+                    fileId: payload.FileID,
+                    fileName: payload.FileName,
+                    fromUser: payload.UserName,
+                    time: payload.Time,
+                    action: payload.Action, // "Save"
+                    isRead: notiOpenRef.current ? true : false,
+                };
+
+                setNotifications(prev => {
+                    const next = [newItem, ...prev]
+                    console.log('[APP] NOTIFICATIONS UPDATED >>>', next)
+                    return next
+                })
+            } catch (e) {
+                console.error("Parse notification error", e);
+            }
+        };
+
+        const init = async () => {
+            // 1. Start SignalR
+            await realtimeService.startAsync();
+
+            // 2. ĐĂNG KÝ LẮNG NGHE SAU KHI startAsync xong
+            realtimeService.onMessage(handler);
+
+            // 3. Load list file => join group
+            await fetchData();
+
+            // 4. Load user list
+            await onLoadUserList();
+
+            const userInfo = getUserInfo();
+            setUsername(userInfo?.UserName);
+        };
+
+        init();
+
+        return () => {
+            realtimeService.stopAsync();
+        };
+    }, []); //chỉ chạy 1 lần khi mount
 
     // Hàm Search
-
     const onSearch = (value: string) => {
         setSearchText(value);
 
@@ -483,6 +536,65 @@ const App: React.FC = () => {
             <div>
                 <Title level={3}>List Of Document</Title>
                 <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
+                    <div style={{ position: 'relative' }}>
+                        <Badge
+                            count={notifications.filter(n => !n.isRead).length}
+                            size="small"
+                        >
+                            <BellOutlined
+                                style={{ fontSize: 20, cursor: 'pointer' }}
+                                onClick={() => {
+                                    setIsNotiOpen(!isNotiOpen);
+                                    if (!isNotiOpen) {
+                                        // mở panel → đánh dấu tất cả là đã đọc
+                                        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                                    }
+                                }}
+                            />
+                        </Badge>
+
+                        {isNotiOpen && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: 28,
+                                    width: 340,
+                                    maxHeight: 400,
+                                    overflowY: 'auto',
+                                    background: '#fff',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                    borderRadius: 4,
+                                    padding: 8,
+                                    zIndex: 1000,
+                                }}
+                            >
+                                {notifications.length === 0 ? (
+                                    <p style={{ margin: 8 }}>No notifications</p>
+                                ) : (
+                                    notifications.map(item => (
+                                        <div
+                                            key={item.id}
+                                            style={{
+                                                padding: '6px 4px',
+                                                borderBottom: '1px solid #f0f0f0',
+                                                fontWeight: item.isRead ? 400 : 600,
+                                                cursor: 'default',
+                                            }}
+                                        >
+                                            <div>
+                                                <span style={{ color: '#1890ff' }}>{item.fromUser}</span>{' '}
+                                                đã <b>{item.action}</b> file <b>{item.fileName}</b>
+                                            </div>
+                                            <div style={{ fontSize: 12, color: '#999' }}>
+                                                {new Date(item.time).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <Search
                         placeholder="Search description"
                         allowClear
