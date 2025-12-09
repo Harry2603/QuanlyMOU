@@ -281,7 +281,7 @@ const App: React.FC = () => {
                 console.log('[APP] PARSED PAYLOAD >>>', payload)
 
                 const newItem: NotificationItem = {
-                    id: `${payload.FileID}-${payload.Time}-${Math.random()}`,
+                    id: Date.now(),
                     fileId: payload.FileID,
                     fileName: payload.FileName,
                     fromUser: payload.UserName,
@@ -301,20 +301,23 @@ const App: React.FC = () => {
         };
 
         const init = async () => {
-            // 1. Start SignalR
+            // Start SignalR
             await realtimeService.startAsync();
 
-            // 2. ĐĂNG KÝ LẮNG NGHE SAU KHI startAsync xong
+            // ĐĂNG KÝ LẮNG NGHE SAU KHI startAsync xong
             realtimeService.onMessage(handler);
 
-            // 3. Load list file => join group
+            // Load list file => join group
             await fetchData();
 
-            // 4. Load user list
+            // Load user list
             await onLoadUserList();
 
             const userInfo = getUserInfo();
-            setUsername(userInfo?.UserName);
+            if (userInfo?.UserName) {
+                setUsername(userInfo.UserName);
+                await loadNotificationsFromDb(userInfo.UserName);
+            }
         };
 
         init();
@@ -323,6 +326,48 @@ const App: React.FC = () => {
             realtimeService.stopAsync();
         };
     }, []); //chỉ chạy 1 lần khi mount
+
+    const loadNotificationsFromDb = async (userName: string) => {
+        try {
+            const resp = await apiUtil.auth.queryAsync('Notification_Select_ByUser', {
+                ToUserName: userName,
+            });
+
+            if (resp.IsSuccess) {
+                const rows = resp.Result as any[];
+
+                const items: NotificationItem[] = rows.map(row => ({
+                    id: row.Id,
+                    fileId: row.FileID,
+                    fileName: row.FileName,
+                    fromUser: row.FromUser,
+                    time: row.CreatedTime,      // format sau
+                    action: row.Action,
+                    isRead: row.IsRead === true,
+                }));
+
+                setNotifications(items);
+            }
+        } catch (err) {
+            console.error('Error loading notifications from DB:', err);
+        }
+    };
+
+    const markAllRead = async () => {
+        const user = getUserInfo();
+        if (!user?.UserName) return;
+
+        try {
+            await apiUtil.auth.queryAsync('Notification_MarkRead_All_ByUser', {
+                ToUserName: user.UserName,
+            });
+
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (err) {
+            console.error('Error mark notifications read:', err);
+        }
+    };
+
 
     // Hàm Search
     const onSearch = (value: string) => {
@@ -543,11 +588,13 @@ const App: React.FC = () => {
                         >
                             <BellOutlined
                                 style={{ fontSize: 20, cursor: 'pointer' }}
-                                onClick={() => {
-                                    setIsNotiOpen(!isNotiOpen);
-                                    if (!isNotiOpen) {
-                                        // mở panel → đánh dấu tất cả là đã đọc
-                                        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                                onClick={async () => {
+                                    const willOpen = !isNotiOpen;
+                                    setIsNotiOpen(willOpen);
+
+                                    if (willOpen) {
+                                        // mở panel → mark read ở DB + state
+                                        await markAllRead();
                                     }
                                 }}
                             />

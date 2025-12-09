@@ -5,7 +5,7 @@ interface CategoryType {
 
 }
 type NotificationItem = {
-    id: string;
+    id: number;
     fileId: number;
     fileName: string;
     fromUser: string;

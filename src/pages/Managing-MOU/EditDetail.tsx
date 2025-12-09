@@ -85,10 +85,56 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                     Modal.success({ content: 'Save Successfull !' });
                     onFetch()
                     onClose(); // đóng modal sau khi lưu
-                    // const userNhan = [1, 3, 5]
-                    // await realtimeService.sendAsync(JSON.stringify(userNhan))
-                    // console.log('userNhan',userNhan)
+                    try {
+                        const userInfo = getUserInfo();
+                        const currentUserName = userInfo?.UserName;
+                        const fileInfo = detail[0];
 
+                        if (currentUserName && fileInfo) {
+                            // Dùng Set để loại trùng
+                            const receivers = new Set<string>();
+
+                            // 1. Author + Partner từ fileDataSelect
+                            if (fileDataSelect?.UsernameAuthor) receivers.add(fileDataSelect.UsernameAuthor);
+                            if (fileDataSelect?.UsernamePartner) receivers.add(fileDataSelect.UsernamePartner);
+
+                            // 2. Lấy thêm tất cả user có quyền trên file (User3, User4...)
+                            try {
+                                const accessResp = await apiUtil.auth.queryAsync(
+                                    'FileDataAccess_Select_ByFile',     // map tới Api_Auth_FileDataAccess_Select_ByFile
+                                    { FileID: fileInfo.FileID }
+                                );
+
+                                if (accessResp.IsSuccess && Array.isArray(accessResp.Result)) {
+                                    (accessResp.Result as any[]).forEach(row => {
+                                        // Tùy theo SP bạn trả về cột gì: UserName / TenDangNhap
+                                        if (row.UserName) {
+                                            receivers.add(row.UserName);
+                                        }
+                                        // hoặc nếu bạn đặt là TenDangNhap thì:
+                                        // if (row.TenDangNhap) receivers.add(row.TenDangNhap);
+                                    });
+                                }
+                            } catch (err) {
+                                console.error('Error loading access users for notification:', err);
+                            }
+                            // 3. Gửi notification cho TẤT CẢ user trong group file
+                            for (const toUser of receivers) {
+                                // Nếu bạn không muốn gửi thông báo cho chính người đang Save thì bỏ comment:
+                                // if (toUser === currentUserName) continue;
+
+                                await apiUtil.auth.queryAsync('Notification_Insert', {
+                                    FileID: fileInfo.FileID,
+                                    FileName: fileInfo.FileName,
+                                    FromUser: currentUserName,
+                                    ToUserName: toUser,
+                                    Action: 'Save',
+                                });
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error inserting notification to DB:', err);
+                    }
                     // THÊM ĐOẠN NÀY – GỬI THÔNG BÁO REALTIME
                     if (fileID && username) {
                         const payload = {
