@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form, Input, message, Select, Row, Col, DatePicker } from "antd";
+import { Button, Form, Input, message,Row, Col, DatePicker } from "antd";
 import { StandardForm } from "../../components";
 import { useNavigate } from "react-router-dom";
 import { apiUtil } from "../../utils";
@@ -23,7 +23,7 @@ const RegisterPage: React.FC = () => {
         const {
             Username,
             Password,
-            Role,
+            // Role,
             MaDN,
             TenDN,
             DiaChi,

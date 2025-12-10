@@ -273,6 +273,7 @@ const App: React.FC = () => {
     useEffect(() => {
         notiOpenRef.current = isNotiOpen;
     }, [isNotiOpen]);
+    
     useEffect(() => {
         const handler = (msg: { Data: string }) => {
             // console.log('[APP] RAW MESSAGE >>>', msg)

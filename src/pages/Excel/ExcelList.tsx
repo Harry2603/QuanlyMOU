@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Space, Table, Button, Input, Typography, Tag, Modal, Select } from 'antd';
-
-import { EditOutlined, VerticalAlignBottomOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Space, Table, Button, Input, Typography, Tag, Modal, Select, Badge } from 'antd';
+import realtimeService from '../../services/realtimeService'
+import { EditOutlined, VerticalAlignBottomOutlined, PlusOutlined, DeleteOutlined, BellOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiUtil } from '../../utils';
 import EditContent from './EditContent';
@@ -25,7 +25,9 @@ const ExcelList: React.FC = () => {
     const [userSelect, setUserSelect] = useState<string>()
     const [selectedPermission, setSelectedPermission] = useState<string>('');
     const [userAccess, setUserAccess] = useState<"Viewer" | "Editor">("Viewer");
-
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [isNotiOpen, setIsNotiOpen] = useState(false);
+    const notiOpenRef = useRef(false);
 
     const getUserInfo = (): UserInfoType | null => {
         const userInfoString = localStorage.getItem('userInfo');
@@ -248,14 +250,103 @@ const ExcelList: React.FC = () => {
             console.error('File download error:', error);
         }
     };
+    useEffect(() => {
+        notiOpenRef.current = isNotiOpen;
+    }, [isNotiOpen]);
 
     useEffect(() => {
-        onLoadUserList();
-        fetchData();
-        const userInfo = getUserInfo()
-        setUsername(userInfo?.UserName)
-    }, []);
+        const handler = (msg: { Data: string }) => {
+            // console.log('[APP] RAW MESSAGE >>>', msg)
+            try {
+                const payload = JSON.parse(msg.Data);
+                // console.log('[APP] PARSED PAYLOAD >>>', payload)
 
+                const newItem: NotificationItem = {
+                    id: Date.now(),
+                    fileId: payload.FileID,
+                    fileName: payload.FileName,
+                    fromUser: payload.UserName,
+                    time: payload.Time,
+                    action: payload.Action, // "Save"
+                    isRead: notiOpenRef.current ? true : false,
+                };
+
+                setNotifications(prev => {
+                    const next = [newItem, ...prev]
+                    // console.log('[APP] NOTIFICATIONS UPDATED >>>', next)
+                    return next
+                })
+            } catch (e) {
+                console.error("Parse notification error", e);
+            }
+        };
+
+        const init = async () => {
+            // Start SignalR
+            await realtimeService.startAsync();
+
+            // ĐĂNG KÝ LẮNG NGHE SAU KHI startAsync xong
+            realtimeService.onMessage(handler);
+
+            // Load list file => join group
+            await fetchData();
+
+            // Load user list
+            await onLoadUserList();
+
+            const userInfo = getUserInfo();
+            if (userInfo?.UserName) {
+                setUsername(userInfo.UserName);
+                await loadNotificationsFromDb(userInfo.UserName);
+            }
+        };
+
+        init();
+
+        return () => {
+            realtimeService.stopAsync();
+        };
+    }, []); //chỉ chạy 1 lần khi mount
+    const loadNotificationsFromDb = async (userName: string) => {
+        try {
+            const resp = await apiUtil.auth.queryAsync('NotificationEX_Select_ByUser', {
+                ToUserName: userName,
+            });
+
+            if (resp.IsSuccess) {
+                const rows = resp.Result as any[];
+
+                const items: NotificationItem[] = rows.map(row => ({
+                    id: row.Id,
+                    fileId: row.FileId,
+                    fileName: row.FileName,
+                    fromUser: row.FromUser,
+                    time: row.CreatedTime,      // format sau
+                    action: row.Action,
+                    isRead: row.IsRead === true,
+                }));
+// console.log('item',items)
+                setNotifications(items);
+            }
+        } catch (err) {
+            console.error('Error loading notifications from DB:', err);
+        }
+    };
+
+    const markAllRead = async () => {
+        const user = getUserInfo();
+        if (!user?.UserName) return;
+
+        try {
+            await apiUtil.auth.queryAsync('NotificationEX_MarkRead_All_ByUser', {
+                ToUserName: user.UserName,
+            });
+
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (err) {
+            console.error('Error mark notifications read:', err);
+        }
+    };
     // Hàm Search
     const onSearch = (value: string) => {
         setSearchText(value);
@@ -489,6 +580,67 @@ const ExcelList: React.FC = () => {
             <div>
                 <Title level={3}>List Of Excel File</Title>
                 <div style={{ display: 'flex', justifyContent: "right", gap: '10px', alignItems: "center" }}>
+                    <div style={{ position: 'relative' }}>
+                        <Badge
+                            count={notifications.filter(n => !n.isRead).length}
+                            size="small"
+                        >
+                            <BellOutlined
+                                style={{ fontSize: 20, cursor: 'pointer' }}
+                                onClick={async () => {
+                                    const willOpen = !isNotiOpen;
+                                    setIsNotiOpen(willOpen);
+
+                                    if (willOpen) {
+                                        // mở panel → mark read ở DB + state
+                                        await markAllRead();
+                                    }
+                                }}
+                            />
+                        </Badge>
+
+                        {isNotiOpen && (
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: 28,
+                                    width: 340,
+                                    maxHeight: 400,
+                                    overflowY: 'auto',
+                                    background: '#fff',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                    borderRadius: 4,
+                                    padding: 8,
+                                    zIndex: 1000,
+                                }}
+                            >
+                                {notifications.length === 0 ? (
+                                    <p style={{ margin: 8 }}>No notifications</p>
+                                ) : (
+                                    notifications.map(item => (
+                                        <div
+                                            key={item.id}
+                                            style={{
+                                                padding: '6px 4px',
+                                                borderBottom: '1px solid #f0f0f0',
+                                                fontWeight: item.isRead ? 400 : 600,
+                                                cursor: 'default',
+                                            }}
+                                        >
+                                            <div>
+                                                <span style={{ color: '#1890ff' }}>{item.fromUser}</span>{' '}
+                                                đã <b>{item.action}</b> file <b>{item.fileName}</b>
+                                            </div>
+                                            <div style={{ fontSize: 12, color: '#999' }}>
+                                                {new Date(item.time).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <Search
                         placeholder="Search description"
                         allowClear
