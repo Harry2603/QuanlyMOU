@@ -275,10 +275,10 @@ const App: React.FC = () => {
     }, [isNotiOpen]);
     useEffect(() => {
         const handler = (msg: { Data: string }) => {
-            console.log('[APP] RAW MESSAGE >>>', msg)
+            // console.log('[APP] RAW MESSAGE >>>', msg)
             try {
                 const payload = JSON.parse(msg.Data);
-                console.log('[APP] PARSED PAYLOAD >>>', payload)
+                // console.log('[APP] PARSED PAYLOAD >>>', payload)
 
                 const newItem: NotificationItem = {
                     id: Date.now(),
@@ -292,7 +292,7 @@ const App: React.FC = () => {
 
                 setNotifications(prev => {
                     const next = [newItem, ...prev]
-                    console.log('[APP] NOTIFICATIONS UPDATED >>>', next)
+                    // console.log('[APP] NOTIFICATIONS UPDATED >>>', next)
                     return next
                 })
             } catch (e) {

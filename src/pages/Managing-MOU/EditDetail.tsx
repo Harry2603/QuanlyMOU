@@ -144,7 +144,7 @@ const EditDetail: React.FC<EditDetailProps> = ({ isModalOpen, Url, onClose, file
                             UserName: username,
                             Time: new Date().toISOString(),
                         }
-                        console.log('>>> SEND REALTIME', payload);
+                        // console.log('>>> SEND REALTIME', payload);
                         await realtimeService.sendAsync(fileID, JSON.stringify(payload))
                     }
                 } else {

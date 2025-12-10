@@ -20,18 +20,18 @@ const RegisterPage: React.FC = () => {
 
     const onFinish = async (formData: FieldType) => {
         setIsBusy(true);
-        const { 
-            Username, 
-            Password, 
-            Role, 
-            MaDN, 
-            TenDN, 
-            DiaChi, 
-            SDT, 
-            Email, 
-            NguoiDaiDien, 
-            Website, 
-            NgayThanhLap, 
+        const {
+            Username,
+            Password,
+            Role,
+            MaDN,
+            TenDN,
+            DiaChi,
+            SDT,
+            Email,
+            NguoiDaiDien,
+            Website,
+            NgayThanhLap,
             GhiChu } = formData;
 
         try {
@@ -51,8 +51,20 @@ const RegisterPage: React.FC = () => {
                 message.error(doanhResp?.Message || "Tạo doanh nghiệp thất bại!");
                 return;
             }
-            const DoanhNghiepID = (doanhResp.Result as any).DoanhNghiepID;
+            const result = doanhResp.Result as any[];
+
+            const DoanhNghiepID = Array.isArray(result)
+                ? result[0]?.DoanhNghiepID
+                : undefined;
+
             // console.log("DoanhNghiepID:", DoanhNghiepID);
+
+            if (!DoanhNghiepID) {
+                message.error("Không lấy được DoanhNghiepID từ API DoanhNghiep_Insert!");
+                setIsBusy(false);
+                return;
+            }
+
 
             // 2️ Gọi API để mã hóa mật khẩu
             const passwordResp = await apiUtil.user.generatePasswordAsync(Password);
@@ -218,7 +230,7 @@ interface FieldType {
     MaDN: string
     TenDN: string
     DiaChi: string
-    SDT: number
+    SDT: string
     Email: string
     NguoiDaiDien: string
     Website: string

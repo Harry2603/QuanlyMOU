@@ -43,7 +43,7 @@ const sendAsync = async (fileId: number, data: string) => {
 
 const joinAsync = async (fileId: number) => {
     if (connection.state !== signalR.HubConnectionState.Connected) {
-        console.log("WAITING FOR CONNECTION BEFORE JOIN...");
+        // console.log("WAITING FOR CONNECTION BEFORE JOIN...");
         await new Promise(res => setTimeout(res, 200));
     }
     await handleMessage('Join', {
@@ -62,14 +62,14 @@ const onMessage = (callback: (data: { Data: string }) => void) => {
 }
 const handleMessage = async (method: string, param?: unknown) => {
     // 1. log xem connection đã tạo chưa
-    console.log(
-        `%c[SignalR] CALL ${method}`,
-        "color: #00aaff; font-weight: bold",
-        {
-            state: connection?.state,
-            param
-        }
-    );
+    // console.log(
+    //     `%c[SignalR] CALL ${method}`,
+    //     "color: #00aaff; font-weight: bold",
+    //     {
+    //         state: connection?.state,
+    //         param
+    //     }
+    // );
 
     // 2. nếu connection không tồn tại
     if (!connection) {
@@ -94,10 +94,10 @@ const handleMessage = async (method: string, param?: unknown) => {
             await connection.invoke(method, param);
         }
 
-        console.log(
-            `%c[SignalR] ✔ invoke SUCCESS ${method}`,
-            "color: #28a745; font-weight: bold"
-        );
+        // console.log(
+        //     `%c[SignalR] ✔ invoke SUCCESS ${method}`,
+        //     "color: #28a745; font-weight: bold"
+        // );
     } catch (error) {
         console.error(
             `%c[SignalR] ❌ invoke ERROR in ${method}`,
