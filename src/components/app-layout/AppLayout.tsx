@@ -75,20 +75,39 @@ const AppLayout = (): React.JSX.Element => {
     }
 
     useEffect(() => {
-        const userInfo = getUserInfo()
-        setRoleId(userInfo?.RoleId)
-        realtimeService.startAsync().then(() => {
-            realtimeService.joinAsync().then(() => {
-                realtimeService.onMessage(data => {
-                    data.Data
-                    console.log('onMessage', data)
-                })
-            })
-        })
+        const init = async () => {
+            const userInfo = getUserInfo();
+            setRoleId(userInfo?.RoleId);
+
+            await realtimeService.startAsync();
+
+            realtimeService.onMessage((msg) => {
+                console.log("onMessage", msg);
+            });
+        };
+
+        init();
+
         return () => {
-            realtimeService.stopAsync()
-        }
-    }, [])
+            realtimeService.stopAsync();
+        };
+    }, []);
+
+    // useEffect(() => {
+    //     const userInfo = getUserInfo()
+    //     setRoleId(userInfo?.RoleId)
+    //     realtimeService.startAsync().then(() => {
+    //         realtimeService.joinAsync().then(() => {
+    //             realtimeService.onMessage(data => {
+    //                 data.Data
+    //                 console.log('onMessage', data)
+    //             })
+    //         })
+    //     })
+    //     return () => {
+    //         realtimeService.stopAsync()
+    //     }
+    // }, [])
 
     useEffect(() => {
         const pathname = location.pathname.slice(1)
@@ -156,7 +175,7 @@ const AppLayout = (): React.JSX.Element => {
 
     const items: MenuItem[] = [
         getItem('ManagingAccount', 'account-group', <UserOutlined />, [
-            ...( roleId === 3 || roleId === 1
+            ...(roleId === 3 || roleId === 1
                 ? [getItem(<Link to="/ManagingAccount/personalaccount">Personal Account</Link>, 'personal_account', <IdcardOutlined />)]
                 : []),
         ]),
@@ -210,7 +229,7 @@ const AppLayout = (): React.JSX.Element => {
                             background: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: 6,
                         }}>
-                        <div className={styles.textLogo}>{collapsed ? 'OFFICE' : 'DIGITAL OFFICE'}</div>
+                        <div className={styles.textLogo}>{collapsed ? 'OFFICE' : 'DIGITAL Ò'}</div>
 
                     </div>
                     <Menu
