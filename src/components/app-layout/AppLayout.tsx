@@ -210,7 +210,7 @@ const AppLayout = (): React.JSX.Element => {
                             background: 'rgba(255, 255, 255, 0.2)',
                             borderRadius: 6,
                         }}>
-                        <div className={styles.textLogo}>{collapsed ? 'MOU' : 'PROCESSOR MOU'}</div>
+                        <div className={styles.textLogo}>{collapsed ? 'OFFICE' : 'DIGITAL OFFICE'}</div>
 
                     </div>
                     <Menu

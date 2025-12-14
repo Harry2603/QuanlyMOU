@@ -102,7 +102,7 @@ const DocumentListOfEmployee: React.FC = () => {
 
     const columns: ColumnsType<any> = [
         {
-            title: 'MOU_Number',
+            title: 'Number',
             key: 'index',
             width: '15%',
             ellipsis: true,
