@@ -32,6 +32,7 @@ const App: React.FC = () => {
     const [selectedPermission, setSelectedPermission] = useState<string>('');
     const [userList, setUserList] = useState<UserListType[]>([])
     const [userAccess, setUserAccess] = useState<"Viewer" | "Editor">("Viewer");
+    const [fileAccessMap, setFileAccessMap] = useState<Record<number, "Viewer" | "Editor">>({});
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [isNotiOpen, setIsNotiOpen] = useState(false);
     const notiOpenRef = useRef(false);
@@ -91,64 +92,55 @@ const App: React.FC = () => {
         setFileDataSelect(record);
 
         const currentUser = getUserInfo();
-        if (!currentUser?.UserName) {
-            console.error("Username not found!");
-            return;
-        }
+        if (!currentUser?.UserName) return;
 
-        // Xác định có phải quản trị viên chính của file không
         const isFileAdmin =
             record.UsernameAuthor === currentUser.UserName ||
             record.UsernamePartner === currentUser.UserName;
-        // nếu bạn xài UsernameAuthor/UsernamePartner thì đổi cho đúng field
 
-        // Nếu là admin file -> luôn Editor, không cần check ExcelFileAccess
+        let access: "Viewer" | "Editor" = "Viewer";
+
         if (isFileAdmin) {
-            // console.log("User là admin của file, set quyền Editor mặc định");
-            setUserAccess("Editor");
+            access = "Editor";
+            setFileAccessMap(prev => ({ ...prev, [record.FileID]: "Editor" }));
         } else {
-            // User thường -> check bảng ExcelFileAccess
             const user = userList.find(u => u.TenDangNhap === currentUser.UserName);
             if (!user) {
-                console.error("UserId not found in the user list!");
-                setUserAccess("Viewer");
+                access = "Viewer";
+                setFileAccessMap(prev => ({ ...prev, [record.FileID]: "Viewer" }));
             } else {
-                await getUserAccess(user.UserId, record.FileID);
+                access = await getUserAccess(user.UserId, record.FileID);
             }
         }
 
+        // (GIỮ NGUYÊN để EditDetail dùng cho file đang mở)
+        setUserAccess(access);
+
         setIsModalOpen(true);
     };
-    const getUserAccess = async (userId: number, fileId: number) => {
-        // console.log("UserId gửi API:", userId, "FileId gửi API:", fileId);
 
+    const getUserAccess = async (userId: number, fileId: number) => {
         if (!userId || !fileId) {
-            console.error("Missing UserId or FileId");
-            setUserAccess("Viewer");
-            return;
+            setFileAccessMap(prev => ({ ...prev, [fileId]: "Viewer" }));
+            return "Viewer" as const;
         }
 
         const resp = await apiUtil.auth.queryAsync(
             "FileDataAccess_Select_ByAccessType",
-            {
-                FileID: fileId,
-                UserId: userId
-            }
+            { FileID: fileId, UserId: userId }
         );
-
-        // console.log(">>> resp từ ExcelFileAccess_Select:", resp);
 
         const rows = resp.Result as { AccessType: string }[] | null;
 
-        if (resp.IsSuccess && rows && rows.length > 0 && rows[0].AccessType) {
-            const access = rows[0].AccessType.trim();   //QUAN TRỌNG
-            // console.log("AccessType sau khi trim:", access);
+        const access: "Viewer" | "Editor" =
+            (resp.IsSuccess && rows && rows.length > 0 && rows[0].AccessType?.trim() === "Editor")
+                ? "Editor"
+                : "Viewer";
 
-            setUserAccess(access === "Editor" ? "Editor" : "Viewer");
-        } else {
-            setUserAccess("Viewer");
-        }
+        setFileAccessMap(prev => ({ ...prev, [fileId]: access }));
+        return access;
     };
+
 
     const fetchData = async () => {
         try {
@@ -213,38 +205,37 @@ const App: React.FC = () => {
         })
     }
     const handleAddAccessClick = (record: FileDataType) => {
-        const isAdminOfFile =
-            record.UsernameAuthor === username ||
-            record.UsernamePartner === username;
+        const isAdmin = isAdminOfFile(record);
+        const access = getAccessOfFile(record);
 
-        if (userAccess === "Viewer" && !isAdminOfFile) {
-            Modal.warning({
-                content: "You are not granted permission for the Add Access feature",
-            });
+        if (access === "Viewer" && !isAdmin) {
+            Modal.warning({ content: "You are not granted permission for the Add Access feature" });
             return;
         }
 
         handleOpenModal(record.FileID);
     };
+
     const isAdminOfFile = (record: FileDataType) => {
         return record.UsernameAuthor === username ||
             record.UsernamePartner === username;
     };
-    const handleDeleteClick = (record: FileDataType) => {
-        const isAdminOfFile =
-            record.UsernameAuthor === username ||
-            record.UsernamePartner === username;
+    const getAccessOfFile = (record: FileDataType): "Viewer" | "Editor" => {
+        return fileAccessMap[record.FileID] ?? "Viewer";
+    };
 
-        if (userAccess === "Viewer" && !isAdminOfFile) {
-            Modal.warning({
-                content: "You do not have permission for the Delete feature",
-            });
+    const handleDeleteClick = (record: FileDataType) => {
+        const isAdmin = isAdminOfFile(record);
+        const access = getAccessOfFile(record);
+
+        if (access === "Viewer" && !isAdmin) {
+            Modal.warning({ content: "You do not have permission for the Delete feature" });
             return;
         }
 
-        // nếu có quyền → gọi hàm xóa thật
         handleDelete(record);
     };
+
     const handleDelete = async (record: any) => {
         Modal.confirm({
             title: 'Delete Confirm',
@@ -273,7 +264,7 @@ const App: React.FC = () => {
     useEffect(() => {
         notiOpenRef.current = isNotiOpen;
     }, [isNotiOpen]);
-    
+
     useEffect(() => {
         const handler = (msg: { Data: string }) => {
             // console.log('[APP] RAW MESSAGE >>>', msg)
@@ -549,31 +540,37 @@ const App: React.FC = () => {
             title: 'Action',
             key: 'action',
             width: '20%',
-            render: (_: any, record: any) => (
-                <Space size="middle">
-                    <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
-                    <VerticalAlignBottomOutlined
-                        style={{ color: 'purple' }}
-                        onClick={() => loadAndDownload('Docx', record.FullUrl)}
-                        className="px-4 py-2 bg-green-600 text-white rounded">
-                    </VerticalAlignBottomOutlined>
-                    <PlusOutlined
-                        style={{
-                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? '#ccc' : 'green',
-                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer'
-                        }}
-                        onClick={() => handleAddAccessClick(record)}
-                    />
+            render: (_: any, record: FileDataType) => {
+                const access = getAccessOfFile(record);
+                const isAdmin = isAdminOfFile(record);
 
-                    <DeleteOutlined
-                        style={{
-                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? 'gray' : 'red',
-                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer',
-                        }}
-                        onClick={() => handleDeleteClick(record)}
-                    />
-                </Space>
-            ),
+                return (
+                    <Space size="middle">
+                        <EditOutlined style={{ color: 'blue' }} onClick={() => handleEdit(record)} />
+
+                        <VerticalAlignBottomOutlined
+                            style={{ color: 'purple' }}
+                            onClick={() => loadAndDownload('Docx', record.FullUrl)}
+                        />
+
+                        <PlusOutlined
+                            style={{
+                                color: access === "Viewer" && !isAdmin ? '#ccc' : 'green',
+                                cursor: access === "Viewer" && !isAdmin ? 'not-allowed' : 'pointer'
+                            }}
+                            onClick={() => handleAddAccessClick(record)}
+                        />
+
+                        <DeleteOutlined
+                            style={{
+                                color: access === "Viewer" && !isAdmin ? 'gray' : 'red',
+                                cursor: access === "Viewer" && !isAdmin ? 'not-allowed' : 'pointer',
+                            }}
+                            onClick={() => handleDeleteClick(record)}
+                        />
+                    </Space>
+                );
+            },
         },
     ];
 

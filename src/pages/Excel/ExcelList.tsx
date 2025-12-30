@@ -25,6 +25,7 @@ const ExcelList: React.FC = () => {
     const [userSelect, setUserSelect] = useState<string>()
     const [selectedPermission, setSelectedPermission] = useState<string>('');
     const [userAccess, setUserAccess] = useState<"Viewer" | "Editor">("Viewer");
+    const [fileAccessMap, setFileAccessMap] = useState<Record<number, "Viewer" | "Editor">>({});
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [isNotiOpen, setIsNotiOpen] = useState(false);
     const notiOpenRef = useRef(false);
@@ -68,33 +69,35 @@ const ExcelList: React.FC = () => {
         setFileDataSelect(record);
 
         const currentUser = getUserInfo();
-        if (!currentUser?.UserName) {
-            console.error("Username not found!");
-            return;
-        }
+        if (!currentUser?.UserName) return;
 
-        // Xác định có phải quản trị viên chính của file không
         const isFileAdmin =
             record.UsernameAuthor === currentUser.UserName ||
             record.UsernamePartner === currentUser.UserName;
-        // nếu bạn xài UsernameAuthor/UsernamePartner thì đổi cho đúng field
 
-        // Nếu là admin file -> luôn Editor, không cần check ExcelFileAccess
+        let access: "Viewer" | "Editor" = "Viewer";
+
         if (isFileAdmin) {
-            // console.log("User là admin của file, set quyền Editor mặc định");
-            setUserAccess("Editor");
+            access = "Editor";
+            setFileAccessMap(prev => ({ ...prev, [record.FileId]: "Editor" }));
         } else {
-            // User thường -> check bảng ExcelFileAccess
             const user = userList.find(u => u.TenDangNhap === currentUser.UserName);
             if (!user) {
-                console.error("UserId not found in the user list!");
-                setUserAccess("Viewer");
+                access = "Viewer";
+                setFileAccessMap(prev => ({ ...prev, [record.FileId]: "Viewer" }));
             } else {
-                await getUserAccess(user.UserId, record.FileId);
+                access = await getUserAccess(user.UserId, record.FileId);
             }
         }
 
+        // (OPTIONAL) nếu bạn vẫn muốn EditContent nhận đúng quyền qua prop userAccess
+        setUserAccess(access);
+
         setIsModalOpen(true);
+    };
+
+    const getAccessOfFile = (record: ExcelFileType): "Viewer" | "Editor" => {
+        return fileAccessMap[record.FileId] ?? "Viewer";
     };
 
     const fetchData = async () => {
@@ -119,36 +122,26 @@ const ExcelList: React.FC = () => {
         }
     };
     const getUserAccess = async (userId: number, fileId: number) => {
-        // console.log("UserId gửi API:", userId, "FileId gửi API:", fileId);
-
         if (!userId || !fileId) {
-            console.error("Missing UserId or FileId");
-            setUserAccess("Viewer");
-            return;
+            setFileAccessMap(prev => ({ ...prev, [fileId]: "Viewer" }));
+            return "Viewer";
         }
 
         const resp = await apiUtil.auth.queryAsync(
             "ExcelFileAccess_Select_ByAccessType",
-            {
-                FileId: fileId,
-                UserId: userId
-            }
+            { FileId: fileId, UserId: userId }
         );
-
-        // console.log(">>> resp từ ExcelFileAccess_Select:", resp);
 
         const rows = resp.Result as { AccessType: string }[] | null;
 
-        if (resp.IsSuccess && rows && rows.length > 0 && rows[0].AccessType) {
-            const access = rows[0].AccessType.trim();   //QUAN TRỌNG
-            // console.log("AccessType sau khi trim:", access);
+        const access: "Viewer" | "Editor" =
+            (resp.IsSuccess && rows && rows.length > 0 && rows[0].AccessType?.trim() === "Editor")
+                ? "Editor"
+                : "Viewer";
 
-            setUserAccess(access === "Editor" ? "Editor" : "Viewer");
-        } else {
-            setUserAccess("Viewer");
-        }
+        setFileAccessMap(prev => ({ ...prev, [fileId]: access }));
+        return access;
     };
-
 
     const A_approved = async (record: ExcelFileType) => {
         const data = {
@@ -213,20 +206,17 @@ const ExcelList: React.FC = () => {
     };
 
     const handleDeleteClick = (record: ExcelFileType) => {
-        const isAdminOfFile =
-            record.UsernameAuthor === username ||
-            record.UsernamePartner === username;
+        const isAdmin = isAdminOfFile(record);
+        const access = getAccessOfFile(record);
 
-        if (userAccess === "Viewer" && !isAdminOfFile) {
-            Modal.warning({
-                content: "You do not have permission for the Delete feature",
-            });
+        if (access === "Viewer" && !isAdmin) {
+            Modal.warning({ content: "You do not have permission for the Delete feature" });
             return;
         }
 
-        // nếu có quyền → gọi hàm xóa thật
         handleDelete(record);
     };
+
 
     const loadAndDownload = async (fullUrl: string, fileName: string) => {
         try {
@@ -325,7 +315,7 @@ const ExcelList: React.FC = () => {
                     action: row.Action,
                     isRead: row.IsRead === true,
                 }));
-// console.log('item',items)
+                // console.log('item',items)
                 setNotifications(items);
             }
         } catch (err) {
@@ -382,20 +372,19 @@ const ExcelList: React.FC = () => {
         setSelectedPermission('');  // reset quyền
         setSelectedFileId(undefined);
     };
-    const handleAddAccessClick = (record: ExcelFileType) => {
-        const isAdminOfFile =
-            record.UsernameAuthor === username ||
-            record.UsernamePartner === username;
 
-        if (userAccess === "Viewer" && !isAdminOfFile) {
-            Modal.warning({
-                content: "You are not granted permission for the Add Access feature",
-            });
+    const handleAddAccessClick = (record: ExcelFileType) => {
+        const isAdmin = isAdminOfFile(record);
+        const access = getAccessOfFile(record);
+
+        if (access === "Viewer" && !isAdmin) {
+            Modal.warning({ content: "You are not granted permission for the Add Access feature" });
             return;
         }
 
         handleOpenModal(record.FileId);
     };
+
 
     const handleSaveAddUser = async () => {
         // Kiểm tra input
@@ -545,33 +534,40 @@ const ExcelList: React.FC = () => {
             title: 'Action',
             key: 'action',
             width: '20%',
-            render: (_: any, record: any) => (
-                <Space size="middle">
-                    <EditOutlined
-                        style={{ color: 'blue' }}
-                        onClick={() => handleEdit(record)} />
-                    <VerticalAlignBottomOutlined
-                        style={{ color: 'purple' }}
-                        onClick={() => loadAndDownload(record.FullUrl, record.Name)}
-                    >
-                    </VerticalAlignBottomOutlined>
-                    <PlusOutlined
-                        style={{
-                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? '#ccc' : 'green',
-                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer'
-                        }}
-                        onClick={() => handleAddAccessClick(record)}
-                    />
+            render: (_: any, record: ExcelFileType) => {
+                const access = getAccessOfFile(record);
+                const isAdmin = isAdminOfFile(record);
 
-                    <DeleteOutlined
-                        style={{
-                            color: userAccess === "Viewer" && !isAdminOfFile(record) ? 'gray' : 'red',
-                            cursor: userAccess === "Viewer" && !isAdminOfFile(record) ? 'not-allowed' : 'pointer',
-                        }}
-                        onClick={() => handleDeleteClick(record)}
-                    />
-                </Space>
-            ),
+                return (
+                    <Space size="middle">
+                        <EditOutlined
+                            style={{ color: 'blue' }}
+                            onClick={() => handleEdit(record)}
+                        />
+
+                        <VerticalAlignBottomOutlined
+                            style={{ color: 'purple' }}
+                            onClick={() => loadAndDownload(record.FullUrl, record.Name)}
+                        />
+
+                        <PlusOutlined
+                            style={{
+                                color: access === "Viewer" && !isAdmin ? '#ccc' : 'green',
+                                cursor: access === "Viewer" && !isAdmin ? 'not-allowed' : 'pointer'
+                            }}
+                            onClick={() => handleAddAccessClick(record)}
+                        />
+
+                        <DeleteOutlined
+                            style={{
+                                color: access === "Viewer" && !isAdmin ? 'gray' : 'red',
+                                cursor: access === "Viewer" && !isAdmin ? 'not-allowed' : 'pointer',
+                            }}
+                            onClick={() => handleDeleteClick(record)}
+                        />
+                    </Space>
+                );
+            },
         },
     ];
 

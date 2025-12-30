@@ -274,7 +274,10 @@ const AccessType: React.FC = () => {
             key: 'FileName',
             width: '20%',
             ellipsis: true,
-            render: (text: string) => <a>{text}</a>,
+            render: (text: string) => {
+                const displayName = text?.replace(/\.txt$/i, '');
+                return <a>{displayName}</a>;
+            }
         },
         {
             title: 'Viewer',
